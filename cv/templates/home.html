@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+<div class="home-shell home-shell--grid">
+
+  {% if perfil %}
+    <!-- ===== Columna izquierda ===== -->
+    <div class="home-left">
+
+      <section class="home-profile">
+        <div class="hp-left">
+          {% if perfil.foto_perfil %}
+            <img class="hp-avatar" src="{{ perfil.foto_perfil.url }}" alt="Foto">
+          {% endif %}
+        </div>
+
+        <div class="hp-right">
+          <h1 class="hp-name">{{ perfil.nombres }} {{ perfil.apellidos }}</h1>
+
+          {% if perfil.descripcionperfil %}
+            <p class="hp-desc">{{ perfil.descripcionperfil }}</p>
+          {% endif %}
+
+          <div class="hp-grid">
+            {% if perfil.nacionalidad %}<div><b>Nacionalidad:</b> {{ perfil.nacionalidad }}</div>{% endif %}
+            {% if perfil.lugarnacimiento %}<div><b>Lugar:</b> {{ perfil.lugarnacimiento }}</div>{% endif %}
+            {% if perfil.fechanacimiento %}<div><b>Nacimiento:</b> {{ perfil.fechanacimiento }}</div>{% endif %}
+            {% if perfil.numerocedula %}<div><b>Cédula:</b> {{ perfil.numerocedula }}</div>{% endif %}
+            {% if perfil.sexo %}<div><b>Sexo:</b> {{ perfil.sexo }}</div>{% endif %}
+
+            {% if perfil.sitioweb %}
+              <div>
+                <b>Web:</b>
+                <a class="btn-outline" href="{{ perfil.sitioweb }}" target="_blank" rel="noopener">
+                  Abrir enlace
+                </a>
+              </div>
+            {% endif %}
+          </div>
+
+          {# BOTÓN IZQUIERDO ELIMINADO (dejar solo el de la derecha) #}
+        </div>
+      </section>
+
+      <section class="home-sections">
+        <h2 class="hs-title">Secciones</h2>
+        <div class="hs-grid">
+          <a class="hs-card" href="{% url 'datos_personales' %}">🧍 Datos personales</a>
+          <a class="hs-card" href="{% url 'cursos' %}">🎓 Cursos realizados</a>
+          <a class="hs-card" href="{% url 'experiencia' %}">🛠️ Experiencia laboral</a>
+          <a class="hs-card" href="{% url 'productos_academicos' %}">📘 Productos académicos</a>
+          <a class="hs-card" href="{% url 'productos_laborales' %}">💼 Productos laborales</a>
+          <a class="hs-card" href="{% url 'reconocimientos' %}">🏅 Reconocimientos</a>
+          <a class="hs-card" href="{% url 'venta_garage' %}">🏷️ Venta garage</a>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ===== Columna derecha (inventado) ===== -->
+    <aside class="home-right">
+      <div class="side-card">
+        <div class="side-head">
+          <div class="side-title">Resumen rápido</div>
+          <div class="side-chip">CV</div>
+        </div>
+
+        <div class="side-metrics">
+          <div class="metric">
+            <div class="m-num">{{ counts.cursos }}</div>
+            <div class="m-lbl">Cursos</div>
+          </div>
+          <div class="metric">
+            <div class="m-num">{{ counts.experiencias }}</div>
+            <div class="m-lbl">Experiencias</div>
+          </div>
+          <div class="metric">
+            <div class="m-num">{{ counts.reconoc }}</div>
+            <div class="m-lbl">Reconoc.</div>
+          </div>
+          <div class="metric">
+            <div class="m-num">{{ counts.prod_acad }}</div>
+            <div class="m-lbl">Prod. Acad.</div>
+          </div>
+          <div class="metric">
+            <div class="m-num">{{ counts.prod_lab }}</div>
+            <div class="m-lbl">Prod. Lab.</div>
+          </div>
+          <div class="metric">
+            <div class="m-num">{{ counts.venta }}</div>
+            <div class="m-lbl">Venta</div>
+          </div>
+        </div>
+
+        <div class="side-sep"></div>
+
+        <div class="side-status">
+          <div class="st-row">
+            <span class="st-k">Impresión</span>
+            {% if permitir_impresion %}
+              <span class="st-ok">Habilitada</span>
+            {% else %}
+              <span class="st-bad">Bloqueada</span>
+            {% endif %}
+          </div>
+          <div class="st-row">
+            <span class="st-k">Perfil activo</span>
+            {% if perfil.perfilactivo %}
+              <span class="st-ok">Sí</span>
+            {% else %}
+              <span class="st-bad">No</span>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if permitir_impresion %}
+          <a class="side-btn" href="{% url 'imprimir_hoja_vida' %}" target="_blank" rel="noopener">
+            Generar PDF completo →
+          </a>
+        {% endif %}
+      </div>
+
+      <div class="side-card side-card--hint">
+        <div class="side-title">Tip</div>
+        <p class="side-text">
+          Para que una sección no aparezca en el PDF, solo deja esa sección sin registros.
+          Los certificados (imágenes) se imprimen en hoja completa automáticamente.
+        </p>
+      </div>
+    </aside>
+
+  {% else %}
+    <p>No hay perfil activo. Actívalo en el Admin.</p>
+  {% endif %}
+
+</div>
+{% endblock %}

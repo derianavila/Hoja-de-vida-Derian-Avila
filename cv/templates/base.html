@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Hoja de Vida{% endblock %}</title>
+
+  <!-- NAV (primero) -->
+  <link rel="stylesheet" href="{% static 'css/ui_nav.css' %}?v=3">
+  <link rel="stylesheet" href="{% static 'css/cv_fix.css' %}?v=3">
+
+</head>
+<body>
+
+  <header class="nav-top">
+    <a class="nav-brand" href="{% url 'home' %}">📄 Hoja de Vida</a>
+
+    <nav class="nav-links">
+      <a href="{% url 'datos_personales' %}">Datos</a>
+      <a href="{% url 'cursos' %}">Cursos</a>
+      <a href="{% url 'experiencia' %}">Experiencia</a>
+      <a href="{% url 'productos_academicos' %}">Prod. Acad.</a>
+      <a href="{% url 'productos_laborales' %}">Prod. Lab.</a>
+      <a href="{% url 'reconocimientos' %}">Reconoc.</a>
+      <a href="{% url 'venta_garage' %}">Venta</a>
+
+    </nav>
+
+    <a class="nav-admin" href="/admin/">Admin</a>
+  </header>
+
+  <main class="page-wrap">
+    {% block content %}{% endblock %}
+  </main>
+
+</body>
+</html>

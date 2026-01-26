@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Venta garage{% endblock %}
+
+{% block content %}
+<div class="sec-shell">
+  <h1 class="sec-title">🏷️ Venta garage</h1>
+
+  {% if items %}
+    {% for x in items %}
+      <div class="card">
+        <h2 class="card-title">{{ x.nombreproducto }}</h2>
+
+        <div class="kv">
+          {% if x.fecha %}
+            <div><b>Fecha:</b> {{ x.fecha }}</div>
+          {% endif %}
+
+          {% if x.estadoproducto %}
+            <div>
+              <b>Estado:</b>
+              <span class="estado estado-{{ x.estadoproducto|lower }}">
+                {{ x.estadoproducto }}
+              </span>
+            </div>
+          {% endif %}
+
+          {% if x.valordelbien is not None %}
+            <div><b>Valor:</b> ${{ x.valordelbien }}</div>
+          {% endif %}
+
+          {% if x.descripcion %}
+            <div><b>Descripción:</b> {{ x.descripcion }}</div>
+          {% endif %}
+        </div>
+
+        {% if x.foto_producto %}
+          <img class="prod-mini" src="{{ x.foto_producto.url }}" alt="Foto producto">
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No hay productos en venta garage.</p>
+  {% endif %}
+
+  <a class="back-link" href="{% url 'home' %}">← Volver al inicio</a>
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+Django>=4.2
+gunicorn
+psycopg2-binary
+dj-database-url
+python-dotenv
+whitenoise
+Pillow
+PyPDF2
+requests
+reportlab

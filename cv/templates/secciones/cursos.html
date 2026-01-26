@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Cursos{% endblock %}
+
+{% block content %}
+<div class="sec-shell">
+  <h1 class="sec-title">🎓 Cursos realizados</h1>
+
+  {% if items %}
+    {% for x in items %}
+      <div class="card">
+        <h2 class="card-title">{{ x.nombrecurso }}</h2>
+
+        <div class="kv">
+          {% if x.descripcioncurso %}<div><b>Descripción:</b> {{ x.descripcioncurso }}</div>{% endif %}
+          {% if x.entidadpatrocinadora %}<div><b>Entidad patrocinadora:</b> {{ x.entidadpatrocinadora }}</div>{% endif %}
+          {% if x.totalhoras %}<div><b>Horas:</b> {{ x.totalhoras }}</div>{% endif %}
+
+          {% if x.fechainicio or x.fechafin %}
+            <div><b>Fechas:</b> {{ x.fechainicio }} {% if x.fechafin %}→ {{ x.fechafin }}{% endif %}</div>
+          {% endif %}
+
+          {% if x.nombrecontactoauspicia %}<div><b>Contacto:</b> {{ x.nombrecontactoauspicia }}</div>{% endif %}
+          {% if x.telefonocontactoauspicia %}<div><b>Tel. contacto:</b> {{ x.telefonocontactoauspicia }}</div>{% endif %}
+          {% if x.emailempresapatrocinadora %}<div><b>Email entidad:</b> {{ x.emailempresapatrocinadora }}</div>{% endif %}
+        </div>
+
+        <div class="cert-row">
+          {% if x.certificado_imagen %}
+            <img class="cert-mini" src="{{ x.certificado_imagen.url }}" alt="Certificado">
+          {% elif x.certificado_pdf %}
+            <iframe class="pdf-mini" src="{{ x.certificado_pdf.url }}#toolbar=0&navpanes=0&scrollbar=0"></iframe>
+          {% endif %}
+
+          <div class="cert-actions">
+            {% if x.certificado_pdf %}
+              <a class="btn-outline" target="_blank" href="{{ x.certificado_pdf.url }}">Abrir PDF</a>
+            {% endif %}
+
+            {% if x.rutacertificado %}
+              <a class="btn-outline" target="_blank" rel="noopener" href="{{ x.rutacertificado }}">Ver certificado</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <a class="back-link" href="{% url 'home' %}">← Volver al inicio</a>
+</div>
+{% endblock %}
