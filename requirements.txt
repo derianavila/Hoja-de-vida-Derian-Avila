@@ -8,3 +8,5 @@ Pillow
 PyPDF2
 requests
 reportlab
+cloudinary
+django-storages
