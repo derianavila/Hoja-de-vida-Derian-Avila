@@ -49,14 +49,12 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
-    # App
     "cv",
 
-    # Cloudinary
     "cloudinary",
-    "django_cloudinary_storage",
-
+    "cloudinary_storage",
 ]
+
 
 # =====================
 # MIDDLEWARE
