@@ -15,9 +15,10 @@ SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 # DEBUG=1 en local, DEBUG=0 en Render
 DEBUG = os.getenv("DEBUG", "1") == "1"
 
-# =====================
+# ========================
 # HOSTS / CSRF
-# =====================
+# ========================
+
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
@@ -35,13 +36,8 @@ CSRF_TRUSTED_ORIGINS = [
     "https://*.onrender.com",
 ]
 
-for host in ALLOWED_HOSTS:
-    if host and host not in ["localhost", "127.0.0.1", ".onrender.com"]:
-        h = host.lstrip(".")
-        CSRF_TRUSTED_ORIGINS.append(f"https://{h}")
-        CSRF_TRUSTED_ORIGINS.append(f"https://*.{h}")
-
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 
 # =====================
 # APPS
