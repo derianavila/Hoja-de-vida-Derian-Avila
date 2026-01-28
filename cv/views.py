@@ -27,23 +27,39 @@ def _get_perfil_activo():
     return Datospersonales.objects.filter(perfilactivo=True).order_by("-idperfil").first()
 
 
+import requests
+
 def _image_reader_from_field(image_field):
     """
-    Compatible con Cloudinary y local.
+    Compatible con:
+    - Local (FileSystemStorage)
+    - Producción (Cloudinary)
     """
     if not image_field:
         return None
+
     try:
+        # 🔹 Cloudinary / Render → usar URL
+        if hasattr(image_field, "url"):
+            response = requests.get(image_field.url, timeout=10)
+            response.raise_for_status()
+            return ImageReader(io.BytesIO(response.content))
+
+        # 🔹 Local → archivo físico
         image_field.open("rb")
         data = image_field.read()
         return ImageReader(io.BytesIO(data))
-    except Exception:
+
+    except Exception as e:
+        print("❌ Error cargando imagen en PDF:", e)
         return None
+
     finally:
         try:
             image_field.close()
         except Exception:
             pass
+
 
 
 def _register_fonts():
@@ -283,3 +299,15 @@ def imprimir_hoja_vida(request):
     c.showPage()
     c.save()
     return response
+def ver_certificado_pdf(request, curso_id):
+    curso = get_object_or_404(Cursosrealizados, idcursorealizado=curso_id)
+
+    if not curso.certificado_pdf:
+        raise Http404("Archivo no encontrado")
+
+    return FileResponse(
+        curso.certificado_pdf.open("rb"),
+        content_type="application/pdf",
+        as_attachment=False,
+        filename=os.path.basename(curso.certificado_pdf.name),
+    )
