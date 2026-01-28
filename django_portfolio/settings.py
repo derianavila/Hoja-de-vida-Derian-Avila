@@ -38,7 +38,6 @@ CSRF_TRUSTED_ORIGINS = [
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-
 # =====================
 # APPS
 # =====================
@@ -104,7 +103,7 @@ if DATABASE_URL:
         "default": dj_database_url.config(
             default=DATABASE_URL,
             conn_max_age=600,
-            ssl_require=not DEBUG,
+            ssl_require=True,   # ← siempre True en Render
         )
     }
 else:
@@ -142,7 +141,6 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # =========================
 # STORAGES (LOCAL vs RENDER)
 # =========================
-
 USE_CLOUDINARY = bool(os.getenv("CLOUDINARY_URL"))
 
 if USE_CLOUDINARY:
@@ -167,7 +165,7 @@ else:
     }
 
 # =====================
-# MEDIA FILES
+# MEDIA FILES (solo local)
 # =====================
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
