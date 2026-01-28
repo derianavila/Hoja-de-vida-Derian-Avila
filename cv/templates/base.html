@@ -6,33 +6,60 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>{% block title %}Hoja de Vida{% endblock %}</title>
 
-  <!-- NAV (primero) -->
-  <link rel="stylesheet" href="{% static 'css/ui_nav.css' %}?v=3">
-  <link rel="stylesheet" href="{% static 'css/cv_fix.css' %}?v=3">
-
+  <!-- Puedes dejar los mismos css -->
+  <link rel="stylesheet" href="{% static 'css/ui_nav.css' %}?v=99">
+  <link rel="stylesheet" href="{% static 'css/cv_fix.css' %}?v=99">
 </head>
-<body>
 
-  <header class="nav-top">
-    <a class="nav-brand" href="{% url 'home' %}">📄 Hoja de Vida</a>
+<body class="app-body">
 
-    <nav class="nav-links">
-      <a href="{% url 'datos_personales' %}">Datos</a>
-      <a href="{% url 'cursos' %}">Cursos</a>
-      <a href="{% url 'experiencia' %}">Experiencia</a>
-      <a href="{% url 'productos_academicos' %}">Prod. Acad.</a>
-      <a href="{% url 'productos_laborales' %}">Prod. Lab.</a>
-      <a href="{% url 'reconocimientos' %}">Reconoc.</a>
-      <a href="{% url 'venta_garage' %}">Venta</a>
+  <div class="app-layout">
 
-    </nav>
+    <!-- SIDEBAR -->
+    <aside class="app-sidebar">
+      <a class="sb-brand" href="{% url 'home' %}">
+        <span class="sb-logo">📄</span>
+        <span class="sb-title">Hoja de Vida</span>
+      </a>
 
-    <a class="nav-admin" href="/admin/">Admin</a>
-  </header>
+      <nav class="sb-nav">
+        <a class="sb-link" href="{% url 'datos_personales' %}">🧍 Datos</a>
+        <a class="sb-link" href="{% url 'cursos' %}">🎓 Cursos</a>
+        <a class="sb-link" href="{% url 'experiencia' %}">🛠️ Experiencia</a>
+        <a class="sb-link" href="{% url 'productos_academicos' %}">📘 Prod. Acad.</a>
+        <a class="sb-link" href="{% url 'productos_laborales' %}">💼 Prod. Lab.</a>
+        <a class="sb-link" href="{% url 'reconocimientos' %}">🏅 Reconoc.</a>
+        <a class="sb-link" href="{% url 'venta_garage' %}">🏷️ Venta</a>
+      </nav>
 
-  <main class="page-wrap">
-    {% block content %}{% endblock %}
-  </main>
+      <div class="sb-footer">
+        <a class="sb-admin" href="/admin/">Admin</a>
+        <div class="sb-hint">Panel rápido • PDF • Secciones</div>
+      </div>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="app-content">
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">{% block top_title %}Inicio{% endblock %}</div>
+          <div class="topbar-sub">{% block top_subtitle %}Gestión de tu hoja de vida{% endblock %}</div>
+        </div>
+
+        <div class="topbar-actions">
+          {% block top_actions %}
+          <a class="top-pill" href="{% url 'home' %}">Dashboard</a>
+          {% endblock %}
+        </div>
+      </div>
+
+      <div class="content-wrap">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+
+  </div>
 
 </body>
 </html>
+
