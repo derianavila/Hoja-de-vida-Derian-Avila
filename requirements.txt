@@ -9,4 +9,4 @@ PyPDF2
 requests
 reportlab
 cloudinary
-cloudinary-storage
+django-cloudinary-storage
