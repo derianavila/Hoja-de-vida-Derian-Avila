@@ -144,24 +144,34 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # =========================
-# STORAGES (ÚNICO Y CORRECTO)
+# STORAGES (LOCAL vs RENDER)
 # =========================
-STORAGES = {
-    "default": {
-        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
+
+USE_CLOUDINARY = bool(os.getenv("CLOUDINARY_URL"))
+
+if USE_CLOUDINARY:
+    # PRODUCCIÓN (Render)
+    STORAGES = {
+        "default": {
+            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+else:
+    # LOCAL
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
 
 # =====================
-# MEDIA (Cloudinary usa esto)
+# MEDIA FILES
 # =====================
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
-
-# =====================
-# DEFAULT FIELD
-# =====================
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
