@@ -1,7 +1,8 @@
 import io
+import requests
 
-from django.http import HttpResponse, HttpResponseForbidden
-from django.shortcuts import render
+from django.http import HttpResponse, HttpResponseForbidden, Http404
+from django.shortcuts import render, get_object_or_404, redirect
 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
@@ -27,25 +28,21 @@ def _get_perfil_activo():
     return Datospersonales.objects.filter(perfilactivo=True).order_by("-idperfil").first()
 
 
-import requests
-
 def _image_reader_from_field(image_field):
     """
     Compatible con:
     - Local (FileSystemStorage)
-    - Producción (Cloudinary)
+    - Cloudinary (Render)
     """
     if not image_field:
         return None
 
     try:
-        # 🔹 Cloudinary / Render → usar URL
         if hasattr(image_field, "url"):
             response = requests.get(image_field.url, timeout=10)
             response.raise_for_status()
             return ImageReader(io.BytesIO(response.content))
 
-        # 🔹 Local → archivo físico
         image_field.open("rb")
         data = image_field.read()
         return ImageReader(io.BytesIO(data))
@@ -61,11 +58,7 @@ def _image_reader_from_field(image_field):
             pass
 
 
-
 def _register_fonts():
-    """
-    SOLO fuentes seguras (Render + Linux).
-    """
     return "Helvetica", "Helvetica-Bold"
 
 
@@ -175,7 +168,7 @@ def venta_garage(request):
 
 
 # =====================================================
-# PDF – HOJA DE VIDA
+# PDF – HOJA DE VIDA (GENERADO)
 # =====================================================
 
 def imprimir_hoja_vida(request):
@@ -195,7 +188,6 @@ def imprimir_hoja_vida(request):
     c = canvas.Canvas(response, pagesize=A4)
     W, H = A4
 
-    # Colores
     azul_oscuro = colors.HexColor("#1f2a33")
     gris = colors.HexColor("#6b7280")
     negro = colors.HexColor("#111827")
@@ -206,24 +198,19 @@ def imprimir_hoja_vida(request):
     content_x = margin + sidebar_w + 0.8 * cm
     content_w = W - content_x - margin
 
-    # SIDEBAR
     c.setFillColor(azul_oscuro)
     c.rect(0, 0, sidebar_w + margin, H, stroke=0, fill=1)
 
     y = H - margin
 
-    # FOTO
     img = _image_reader_from_field(perfil.foto_perfil)
     if img:
-        try:
-            c.saveState()
-            p = c.beginPath()
-            p.circle(margin + 3 * cm, y - 3 * cm, 2 * cm)
-            c.clipPath(p, stroke=0)
-            c.drawImage(img, margin + 1 * cm, y - 5 * cm, 4 * cm, 4 * cm, mask="auto")
-            c.restoreState()
-        except Exception:
-            pass
+        c.saveState()
+        p = c.beginPath()
+        p.circle(margin + 3 * cm, y - 3 * cm, 2 * cm)
+        c.clipPath(p, stroke=0)
+        c.drawImage(img, margin + 1 * cm, y - 5 * cm, 4 * cm, 4 * cm, mask="auto")
+        c.restoreState()
 
     y -= 6 * cm
 
@@ -231,7 +218,6 @@ def imprimir_hoja_vida(request):
     c.setFont(FONT_B, 14)
     c.drawCentredString(margin + 3 * cm, y, f"{perfil.nombres} {perfil.apellidos}")
 
-    # CONTENIDO
     yR = H - margin
 
     def titulo(txt):
@@ -259,55 +245,23 @@ def imprimir_hoja_vida(request):
         yR -= 0.6 * cm
         c.setFillColor(negro)
 
-    # RESUMEN
     titulo("RESUMEN PROFESIONAL")
     item("", "", perfil.descripcionperfil or "")
-
-    # EXPERIENCIA
-    experiencias = perfil.experiencias.filter(activarparaqueseveaenfront=True)
-    if experiencias.exists():
-        titulo("EXPERIENCIA LABORAL")
-        for e in experiencias:
-            item(
-                f"{e.cargodesempenado} — {e.nombrempresa}",
-                f"{e.fechainicio} → {e.fechafin}",
-                e.responsabilidades or e.descripcionfunciones
-            )
-
-    # CURSOS
-    cursos = perfil.cursos.filter(activarparaqueseveaenfront=True)
-    if cursos.exists():
-        titulo("CURSOS / FORMACIÓN")
-        for c_ in cursos:
-            item(
-                c_.nombrecurso,
-                f"{c_.fechainicio} → {c_.fechafin} | {c_.entidadpatrocinadora}",
-                c_.descripcioncurso
-            )
-
-    # RECONOCIMIENTOS
-    reconoc = perfil.reconocimientos.filter(activarparaqueseveaenfront=True)
-    if reconoc.exists():
-        titulo("RECONOCIMIENTOS")
-        for r in reconoc:
-            item(
-                r.tiporeconocimiento,
-                r.entidadpatrocinadora,
-                r.descripcionreconocimiento
-            )
 
     c.showPage()
     c.save()
     return response
+
+
+# =====================================================
+# PDF CERTIFICADO (CLOUDINARY)
+# =====================================================
+
 def ver_certificado_pdf(request, curso_id):
     curso = get_object_or_404(Cursosrealizados, idcursorealizado=curso_id)
 
     if not curso.certificado_pdf:
         raise Http404("Archivo no encontrado")
 
-    return FileResponse(
-        curso.certificado_pdf.open("rb"),
-        content_type="application/pdf",
-        as_attachment=False,
-        filename=os.path.basename(curso.certificado_pdf.name),
-    )
+    # ✅ Cloudinary: redirigir al archivo
+    return redirect(curso.certificado_pdf.url)
