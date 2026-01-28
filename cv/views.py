@@ -25,7 +25,9 @@ from .models import (
 # =====================================================
 
 def _get_perfil_activo():
-    return Datospersonales.objects.filter(perfilactivo=True).order_by("-idperfil").first()
+    return Datospersonales.objects.filter(
+        perfilactivo=True
+    ).order_by("-idperfil").first()
 
 
 def _image_reader_from_field(image_field):
@@ -38,14 +40,15 @@ def _image_reader_from_field(image_field):
         return None
 
     try:
+        # Cloudinary / producción
         if hasattr(image_field, "url"):
-            response = requests.get(image_field.url, timeout=10)
-            response.raise_for_status()
-            return ImageReader(io.BytesIO(response.content))
+            resp = requests.get(image_field.url, timeout=15)
+            resp.raise_for_status()
+            return ImageReader(io.BytesIO(resp.content))
 
+        # Local
         image_field.open("rb")
-        data = image_field.read()
-        return ImageReader(io.BytesIO(data))
+        return ImageReader(io.BytesIO(image_field.read()))
 
     except Exception as e:
         print("❌ Error cargando imagen en PDF:", e)
@@ -59,6 +62,7 @@ def _image_reader_from_field(image_field):
 
 
 def _register_fonts():
+    # SOLO fuentes seguras en Linux / Render
     return "Helvetica", "Helvetica-Bold"
 
 
@@ -103,67 +107,49 @@ def datos_personales(request):
 
 def cursos(request):
     perfil = _get_perfil_activo()
-    items = (
-        perfil.cursos
-        .filter(activarparaqueseveaenfront=True)
-        .order_by("-fechafin", "-fechainicio", "-idcursorealizado")
-        if perfil else []
-    )
+    items = perfil.cursos.filter(
+        activarparaqueseveaenfront=True
+    ).order_by("-fechafin", "-fechainicio") if perfil else []
     return render(request, "secciones/cursos.html", {"perfil": perfil, "items": items})
 
 
 def experiencia(request):
     perfil = _get_perfil_activo()
-    items = (
-        perfil.experiencias
-        .filter(activarparaqueseveaenfront=True)
-        .order_by("-fechafin", "-fechainicio", "-idexperiencialaboral")
-        if perfil else []
-    )
+    items = perfil.experiencias.filter(
+        activarparaqueseveaenfront=True
+    ).order_by("-fechafin", "-fechainicio") if perfil else []
     return render(request, "secciones/experiencia.html", {"perfil": perfil, "items": items})
 
 
 def productos_academicos(request):
     perfil = _get_perfil_activo()
-    items = (
-        perfil.productos_academicos
-        .filter(activarparaqueseveaenfront=True)
-        .order_by("-idproductoacademico")
-        if perfil else []
-    )
+    items = perfil.productos_academicos.filter(
+        activarparaqueseveaenfront=True
+    ) if perfil else []
     return render(request, "secciones/productos_academicos.html", {"perfil": perfil, "items": items})
 
 
 def productos_laborales(request):
     perfil = _get_perfil_activo()
-    items = (
-        perfil.productos_laborales
-        .filter(activarparaqueseveaenfront=True)
-        .order_by("-fechaproducto", "-idproductolaboral")
-        if perfil else []
-    )
+    items = perfil.productos_laborales.filter(
+        activarparaqueseveaenfront=True
+    ) if perfil else []
     return render(request, "secciones/productos_laborales.html", {"perfil": perfil, "items": items})
 
 
 def reconocimientos(request):
     perfil = _get_perfil_activo()
-    items = (
-        perfil.reconocimientos
-        .filter(activarparaqueseveaenfront=True)
-        .order_by("-fechareconocimiento", "-idreconocimiento")
-        if perfil else []
-    )
+    items = perfil.reconocimientos.filter(
+        activarparaqueseveaenfront=True
+    ) if perfil else []
     return render(request, "secciones/reconocimientos.html", {"perfil": perfil, "items": items})
 
 
 def venta_garage(request):
     perfil = _get_perfil_activo()
-    items = (
-        perfil.venta_garage
-        .filter(activarparaqueseveaenfront=True)
-        .order_by("-fecha", "-idventagarage")
-        if perfil else []
-    )
+    items = perfil.venta_garage.filter(
+        activarparaqueseveaenfront=True
+    ) if perfil else []
     return render(request, "secciones/venta_garage.html", {"perfil": perfil, "items": items})
 
 
@@ -194,15 +180,17 @@ def imprimir_hoja_vida(request):
     blanco = colors.white
 
     margin = 1.2 * cm
-    sidebar_w = 6.0 * cm
+    sidebar_w = 6 * cm
     content_x = margin + sidebar_w + 0.8 * cm
     content_w = W - content_x - margin
 
+    # SIDEBAR
     c.setFillColor(azul_oscuro)
     c.rect(0, 0, sidebar_w + margin, H, stroke=0, fill=1)
 
     y = H - margin
 
+    # FOTO
     img = _image_reader_from_field(perfil.foto_perfil)
     if img:
         c.saveState()
@@ -245,8 +233,42 @@ def imprimir_hoja_vida(request):
         yR -= 0.6 * cm
         c.setFillColor(negro)
 
+    # RESUMEN
     titulo("RESUMEN PROFESIONAL")
-    item("", "", perfil.descripcionperfil or "")
+    item("", "", perfil.descripcionperfil or " ")
+
+    # EXPERIENCIA
+    exps = perfil.experiencias.filter(activarparaqueseveaenfront=True)
+    if exps.exists():
+        titulo("EXPERIENCIA LABORAL")
+        for e in exps:
+            item(
+                f"{e.cargodesempenado} — {e.nombrempresa}",
+                f"{e.fechainicio} → {e.fechafin}",
+                e.responsabilidades or e.descripcionfunciones
+            )
+
+    # CURSOS
+    cursos = perfil.cursos.filter(activarparaqueseveaenfront=True)
+    if cursos.exists():
+        titulo("CURSOS / FORMACIÓN")
+        for c_ in cursos:
+            item(
+                c_.nombrecurso,
+                f"{c_.fechainicio} → {c_.fechafin} | {c_.entidadpatrocinadora}",
+                c_.descripcioncurso
+            )
+
+    # RECONOCIMIENTOS
+    recs = perfil.reconocimientos.filter(activarparaqueseveaenfront=True)
+    if recs.exists():
+        titulo("RECONOCIMIENTOS")
+        for r in recs:
+            item(
+                r.tiporeconocimiento,
+                r.entidadpatrocinadora,
+                r.descripcionreconocimiento
+            )
 
     c.showPage()
     c.save()
@@ -263,5 +285,5 @@ def ver_certificado_pdf(request, curso_id):
     if not curso.certificado_pdf:
         raise Http404("Archivo no encontrado")
 
-    # ✅ Cloudinary: redirigir al archivo
+    # Cloudinary: REDIRECT (forma correcta)
     return redirect(curso.certificado_pdf.url)
