@@ -8,35 +8,26 @@
   {% if items %}
     {% for x in items %}
       <div class="card">
-        <h2 class="card-title">
-          {{ x.tiporeconocimiento|default:"Reconocimiento" }}
-        </h2>
+        <h2 class="card-title">{{ x.tiporeconocimiento|default:"Reconocimiento" }}</h2>
 
         <div class="kv">
           {% if x.entidadpatrocinadora %}<div><b>Entidad patrocinadora:</b> {{ x.entidadpatrocinadora }}</div>{% endif %}
           {% if x.fechareconocimiento %}<div><b>Fecha:</b> {{ x.fechareconocimiento }}</div>{% endif %}
           {% if x.descripcionreconocimiento %}<div><b>Descripción:</b> {{ x.descripcionreconocimiento }}</div>{% endif %}
-          {% if x.nombrecontactoauspicia %}<div><b>Contacto:</b> {{ x.nombrecontactoauspicia }}</div>{% endif %}
-          {% if x.telefonocontactoauspicia %}<div><b>Teléfono contacto:</b> {{ x.telefonocontactoauspicia }}</div>{% endif %}
         </div>
 
+        {% if x.certificado_pdf or x.certificado_imagen %}
         <div class="cert-row">
-          {% if x.certificado_imagen %}
+          {% if x.certificado_pdf %}
+            <iframe class="pdf-mini" src="{{ x.certificado_pdf.url }}#toolbar=0&navpanes=0&scrollbar=0" style="width:180px; height:220px;"></iframe>
+            <div class="cert-actions">
+              <a class="btn-outline" target="_blank" href="{{ x.certificado_pdf.url }}">Abrir PDF</a>
+            </div>
+          {% elif x.certificado_imagen %}
             <img class="cert-mini" src="{{ x.certificado_imagen.url }}" alt="Certificado">
-          {% elif x.certificado_pdf %}
-            <iframe class="pdf-mini" src="{{ x.certificado_pdf.url }}#toolbar=0&navpanes=0&scrollbar=0"></iframe>
           {% endif %}
-
-          <div class="cert-actions">
-            {% if x.certificado_pdf %}
-              <a class="btn-outline" target="_blank" rel="noopener" href="{{ x.certificado_pdf.url }}">Abrir PDF</a>
-            {% endif %}
-
-            {% if x.rutacertificado %}
-              <a class="btn-outline" target="_blank" rel="noopener" href="{{ x.rutacertificado }}">Ver certificado</a>
-            {% endif %}
-          </div>
         </div>
+        {% endif %}
       </div>
     {% endfor %}
   {% else %}

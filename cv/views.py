@@ -280,10 +280,13 @@ def imprimir_hoja_vida(request):
 # =====================================================
 
 def ver_certificado_pdf(request, curso_id):
+    """
+    Redirige a PDF en Cloudinary directamente, evitando mostrar como imagen.
+    """
     curso = get_object_or_404(Cursosrealizados, idcursorealizado=curso_id)
 
     if not curso.certificado_pdf:
         raise Http404("Archivo no encontrado")
 
-    # Cloudinary: REDIRECT (forma correcta)
+    # Redirige al PDF de Cloudinary
     return redirect(curso.certificado_pdf.url)
