@@ -146,7 +146,7 @@ if USE_CLOUDINARY:
     # PRODUCCIÓN (Render)
     STORAGES = {
         "default": {
-            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+            "BACKEND": "cloudinary_storage.storage.RawMediaCloudinaryStorage",
         },
         "staticfiles": {
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
