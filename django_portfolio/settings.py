@@ -152,16 +152,18 @@ USE_CLOUDINARY = bool(os.getenv("CLOUDINARY_URL"))
 if USE_CLOUDINARY:
     # PRODUCCIÓN (Render)
     STORAGES = {
-    "default": {
-        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
-    },
-    "raw": {
-        "BACKEND": "cloudinary_storage.storage.RawMediaCloudinaryStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
+        "default": {
+            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        },
+        "raw": {
+            "BACKEND": "cloudinary_storage.storage.RawMediaCloudinaryStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+    # ESTA LÍNEA ES EL "PARCHE" PARA QUE RENDER NO DE ERROR
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 else:
     # LOCAL
@@ -175,7 +177,7 @@ else:
     }
 
 # =====================
-# MEDIA FILES (solo local)
+# MEDIA FILES
 # =====================
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
