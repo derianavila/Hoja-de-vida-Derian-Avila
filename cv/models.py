@@ -328,7 +328,16 @@ class Ventagarage(models.Model):
     )
 
     nombreproducto = models.CharField(max_length=120)
-    estadoproducto = models.CharField(max_length=40)
+
+    ESTADO_PRODUCTO_CHOICES = [
+        ("BUENO", "Bueno"),
+        ("REGULAR", "Regular"),
+    ]
+
+    estadoproducto = models.CharField(
+        max_length=20,
+        choices=ESTADO_PRODUCTO_CHOICES,
+    )
 
     descripcion = models.TextField(blank=True, null=True)
     fecha = models.DateField(validators=[validar_fecha_no_futura])
@@ -338,7 +347,10 @@ class Ventagarage(models.Model):
         decimal_places=2,
         blank=True,
         null=True,
-        validators=[MinValueValidator(Decimal("0.01")), MaxValueValidator(Decimal("99999.99"))],
+        validators=[
+            MinValueValidator(Decimal("0.01")),
+            MaxValueValidator(Decimal("99999.99")),
+        ],
     )
 
     activarparaqueseveaenfront = models.BooleanField(default=True)

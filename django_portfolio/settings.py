@@ -47,14 +47,14 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    # 'cloudinary_storage' DEBE ir antes de 'staticfiles'
+    "cloudinary_storage",
     "django.contrib.staticfiles",
 
     "cv",
 
     "cloudinary",
-    "cloudinary_storage",
 ]
-
 
 # =====================
 # MIDDLEWARE
@@ -95,6 +95,9 @@ TEMPLATES = [
 # =====================
 # DATABASE
 # =====================
+# =====================
+# DATABASE
+# =====================
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:
@@ -102,8 +105,12 @@ if DATABASE_URL:
         "default": dj_database_url.config(
             default=DATABASE_URL,
             conn_max_age=600,
-            ssl_require=True,   # ← siempre True en Render
+            # Quitamos ssl_require=True de aquí para manejarlo en ENGINE_OPTIONS
         )
+    }
+    # Añadimos esto para forzar el modo SSL compatible
+    DATABASES["default"]["OPTIONS"] = {
+        "sslmode": "require",
     }
 else:
     DATABASES = {
