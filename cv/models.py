@@ -11,12 +11,9 @@ from django.core.validators import (
 )
 from django.db import models
 
-# 🔑 Storage RAW solo para PDFs (NO rompe imágenes)
 from cloudinary_storage.storage import RawMediaCloudinaryStorage
-raw_storage = RawMediaCloudinaryStorage(
-    resource_type="raw",
-    type="upload",          # 👈 ESTO ES LO QUE FALTABA
-)
+
+raw_storage = RawMediaCloudinaryStorage()
 
 
 
@@ -158,7 +155,6 @@ class Datospersonales(models.Model):
 class CertificadoMixin(models.Model):
     certificado_pdf = models.FileField(
         upload_to="certificados/",
-        storage=raw_storage,
         blank=True,
         null=True,
         validators=[validar_pdf, FileExtensionValidator(["pdf"])],
@@ -172,6 +168,7 @@ class CertificadoMixin(models.Model):
 
     class Meta:
         abstract = True
+
 
 
 # =========================
