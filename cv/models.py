@@ -11,9 +11,8 @@ from django.core.validators import (
 )
 from django.db import models
 
-# 🔥 IMPORTANTE: storage RAW SOLO para PDFs
+# 🔑 Storage RAW solo para PDFs (NO rompe imágenes)
 from cloudinary_storage.storage import RawMediaCloudinaryStorage
-
 raw_storage = RawMediaCloudinaryStorage()
 
 
@@ -104,6 +103,7 @@ class Datospersonales(models.Model):
     ]
 
     idperfil = models.AutoField(primary_key=True)
+
     descripcionperfil = models.CharField(max_length=200, blank=True, null=True)
     foto_perfil = models.ImageField(upload_to="perfiles/", blank=True, null=True)
 
@@ -119,7 +119,9 @@ class Datospersonales(models.Model):
     fechanacimiento = models.DateField(validators=[validar_fecha_no_futura])
 
     numerocedula = models.CharField(
-        unique=True, max_length=10, validators=[cedula_10_digitos]
+        unique=True,
+        max_length=10,
+        validators=[cedula_10_digitos],
     )
 
     sexo = models.CharField(max_length=1, blank=True, null=True, choices=SEXO_CHOICES)
@@ -128,6 +130,7 @@ class Datospersonales(models.Model):
 
     telefonoconvencional = models.CharField(max_length=20, blank=True, null=True, validators=[telefono_basico])
     telefonofijo = models.CharField(max_length=20, blank=True, null=True, validators=[telefono_basico])
+
     direcciontrabajo = models.CharField(max_length=120, blank=True, null=True)
     direcciondomiciliaria = models.CharField(max_length=120, blank=True, null=True)
 
@@ -149,16 +152,14 @@ class Datospersonales(models.Model):
 # MIXIN PARA CERTIFICADOS
 # =========================
 class CertificadoMixin(models.Model):
-    # ✅ PDF → RAW (abre en navegador)
     certificado_pdf = models.FileField(
         upload_to="certificados/",
-        storage=raw_storage,   # 🔥 CLAVE
+        storage=raw_storage,          # 🔥 PDF → raw/upload
         blank=True,
         null=True,
         validators=[validar_pdf, FileExtensionValidator(["pdf"])],
     )
 
-    # ✅ Imagen → normal (NO se rompe)
     certificado_imagen = models.ImageField(
         upload_to="certificados/imagenes/",
         blank=True,
@@ -167,3 +168,180 @@ class CertificadoMixin(models.Model):
 
     class Meta:
         abstract = True
+
+
+# =========================
+# CURSOS REALIZADOS
+# =========================
+class Cursosrealizados(CertificadoMixin, models.Model):
+    idcursorealizado = models.AutoField(primary_key=True)
+
+    perfil = models.ForeignKey(
+        Datospersonales,
+        on_delete=models.CASCADE,
+        related_name="cursos",
+        db_column="idperfilconqueestaactivo",
+    )
+
+    nombrecurso = models.CharField(max_length=120)
+    fechainicio = models.DateField(validators=[validar_fecha_desde_2000, validar_fecha_no_futura])
+    fechafin = models.DateField(validators=[validar_fecha_desde_2000, validar_fecha_no_futura])
+
+    totalhoras = models.IntegerField(blank=True, null=True, validators=[MinValueValidator(1)])
+    descripcioncurso = models.CharField(max_length=200, blank=True, null=True)
+
+    entidadpatrocinadora = models.CharField(max_length=120, blank=True, null=True)
+    nombrecontactoauspicia = models.CharField(max_length=120, blank=True, null=True)
+    telefonocontactoauspicia = models.CharField(max_length=40, blank=True, null=True, validators=[telefono_basico])
+    emailempresapatrocinadora = models.CharField(max_length=120, blank=True, null=True, validators=[EmailValidator()])
+
+    activarparaqueseveaenfront = models.BooleanField(default=True)
+    rutacertificado = models.CharField(max_length=200, blank=True, null=True)
+
+    class Meta:
+        db_table = "CURSOSREALIZADOS"
+
+    def clean(self):
+        validar_inicio_fin_obligatorios_juntos(self.fechainicio, self.fechafin)
+        validar_rango_inicio_fin(self.fechainicio, self.fechafin)
+        validar_no_antes_de_nacimiento(self.perfil, self.fechainicio, "fechainicio")
+        validar_no_antes_de_nacimiento(self.perfil, self.fechafin, "fechafin")
+
+
+# =========================
+# EXPERIENCIA LABORAL
+# =========================
+class Experiencialaboral(CertificadoMixin, models.Model):
+    idexperiencialaboral = models.AutoField(primary_key=True)
+
+    perfil = models.ForeignKey(
+        Datospersonales,
+        on_delete=models.CASCADE,
+        related_name="experiencias",
+        db_column="idperfilconqueestaactivo",
+    )
+
+    nombrempresa = models.CharField(max_length=120)
+    cargodesempenado = models.CharField(max_length=120)
+
+    fechainicio = models.DateField(validators=[validar_fecha_desde_2000, validar_fecha_no_futura])
+    fechafin = models.DateField(validators=[validar_fecha_desde_2000, validar_fecha_no_futura])
+
+    responsabilidades = models.TextField(blank=True, null=True)
+    direccionempresa = models.CharField(max_length=150, blank=True, null=True)
+    telefonoempresa = models.CharField(max_length=40, blank=True, null=True, validators=[telefono_basico])
+    emailempresa = models.CharField(max_length=120, blank=True, null=True, validators=[EmailValidator()])
+
+    activarparaqueseveaenfront = models.BooleanField(default=True)
+    rutacertificado = models.CharField(max_length=200, blank=True, null=True)
+
+    class Meta:
+        db_table = "EXPERIENCIALABORAL"
+
+
+# =========================
+# PRODUCTOS ACADÉMICOS
+# =========================
+class Productosacademicos(CertificadoMixin, models.Model):
+    idproductoacademico = models.AutoField(primary_key=True)
+
+    perfil = models.ForeignKey(
+        Datospersonales,
+        on_delete=models.CASCADE,
+        related_name="productos_academicos",
+        db_column="idperfilconqueestaactivo",
+    )
+
+    nombreproducto = models.CharField(max_length=120)
+    clasificador = models.CharField(max_length=20, choices=CLASIFICADOR_ACADEMICO_CHOICES)
+
+    descripcion = models.TextField(blank=True, null=True)
+    activarparaqueseveaenfront = models.BooleanField(default=True)
+
+    imagenproducto = models.ImageField(upload_to="productos/academicos/", blank=True, null=True)
+
+    class Meta:
+        db_table = "PRODUCTOSACADEMICOS"
+
+
+# =========================
+# PRODUCTOS LABORALES
+# =========================
+class Productoslaborales(CertificadoMixin, models.Model):
+    idproductolaboral = models.AutoField(primary_key=True)
+
+    perfil = models.ForeignKey(
+        Datospersonales,
+        on_delete=models.CASCADE,
+        related_name="productos_laborales",
+        db_column="idperfilconqueestaactivo",
+    )
+
+    nombreproducto = models.CharField(max_length=120)
+    fechaproducto = models.DateField(validators=[validar_fecha_desde_2000, validar_fecha_no_futura])
+
+    descripcion = models.TextField(blank=True, null=True)
+    activarparaqueseveaenfront = models.BooleanField(default=True)
+
+    imagenproducto = models.ImageField(upload_to="productos/laborales/", blank=True, null=True)
+
+    class Meta:
+        db_table = "PRODUCTOSLABORALES"
+
+
+# =========================
+# RECONOCIMIENTOS
+# =========================
+class Reconocimientos(CertificadoMixin, models.Model):
+    idreconocimiento = models.AutoField(primary_key=True)
+
+    perfil = models.ForeignKey(
+        Datospersonales,
+        on_delete=models.CASCADE,
+        related_name="reconocimientos",
+        db_column="idperfilconqueestaactivo",
+    )
+
+    tiporeconocimiento = models.CharField(max_length=20)
+    fechareconocimiento = models.DateField(validators=[validar_fecha_desde_2000, validar_fecha_no_futura])
+    entidadpatrocinadora = models.CharField(max_length=100)
+
+    descripcionreconocimiento = models.CharField(max_length=100, blank=True, null=True)
+    activarparaqueseveaenfront = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "RECONOCIMIENTOS"
+
+
+# =========================
+# VENTA GARAGE
+# =========================
+class Ventagarage(models.Model):
+    idventagarage = models.AutoField(primary_key=True)
+
+    perfil = models.ForeignKey(
+        Datospersonales,
+        on_delete=models.CASCADE,
+        related_name="venta_garage",
+        db_column="idperfilconqueestaactivo",
+    )
+
+    nombreproducto = models.CharField(max_length=120)
+    estadoproducto = models.CharField(max_length=40)
+
+    descripcion = models.TextField(blank=True, null=True)
+    fecha = models.DateField(validators=[validar_fecha_no_futura])
+
+    valordelbien = models.DecimalField(
+        max_digits=7,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(Decimal("0.01")), MaxValueValidator(Decimal("99999.99"))],
+    )
+
+    activarparaqueseveaenfront = models.BooleanField(default=True)
+    foto_producto = models.ImageField(upload_to="venta_garage/", blank=True, null=True)
+
+    class Meta:
+        db_table = "VENTAGARAGE"
