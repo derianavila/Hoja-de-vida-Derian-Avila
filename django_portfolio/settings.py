@@ -18,7 +18,6 @@ DEBUG = os.getenv("DEBUG", "1") == "1"
 # ========================
 # HOSTS / CSRF
 # ========================
-
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
@@ -47,10 +46,12 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    "cloudinary_storage",
     "django.contrib.staticfiles",
-    "cv",
+
+    "cloudinary_storage",
     "cloudinary",
+
+    "cv",
 ]
 
 # =====================
@@ -92,9 +93,6 @@ TEMPLATES = [
 # =====================
 # DATABASE
 # =====================
-# =====================
-# DATABASE
-# =====================
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:
@@ -102,10 +100,8 @@ if DATABASE_URL:
         "default": dj_database_url.config(
             default=DATABASE_URL,
             conn_max_age=600,
-            # Quitamos ssl_require=True de aquí para manejarlo en ENGINE_OPTIONS
         )
     }
-    # Añadimos esto para forzar el modo SSL compatible
     DATABASES["default"]["OPTIONS"] = {
         "sslmode": "require",
     }
@@ -135,9 +131,17 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
+# =====================
+# STATIC & MEDIA
+# =====================
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # =========================
-# STORAGES (LOCAL vs RENDER)
+# STORAGES (Django 4.2+ correcto)
 # =========================
 USE_CLOUDINARY = bool(os.getenv("CLOUDINARY_URL"))
 
@@ -147,20 +151,16 @@ if USE_CLOUDINARY:
         "default": {
             "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
         },
-        "raw": {
-            "BACKEND": "cloudinary_storage.storage.RawMediaCloudinaryStorage",
-        },
         "staticfiles": {
-            # Forzamos a WhiteNoise a ignorar archivos faltantes aquí mismo
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
-    # Mantenemos estas por compatibilidad total
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+    # Evita que WhiteNoise rompa el build por un SVG del admin
     WHITENOISE_MANIFEST_STRICT = False
 
 else:
-    # LOCAL (Sin cambios)
+    # LOCAL
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -169,11 +169,8 @@ else:
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
     }
-# =====================
-# ARCHIVOS ESTÁTICOS Y MEDIA
-# =====================
-STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles" # Asegúrate de tener esta línea también
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+# =====================
+# DEFAULT PRIMARY KEY
+# =====================
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
