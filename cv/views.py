@@ -1,5 +1,10 @@
 import io
 import requests
+# ==============================
+# IMPORTS CLOUDINARY (si usas Cloudinary)
+# ==============================
+import cloudinary
+import cloudinary.utils
 
 from django.http import HttpResponse, HttpResponseForbidden, Http404
 from django.shortcuts import render, get_object_or_404, redirect
