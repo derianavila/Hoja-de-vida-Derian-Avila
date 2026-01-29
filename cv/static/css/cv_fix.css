@@ -1442,21 +1442,26 @@ small, .muted{ color: rgba(255,255,255,.70); }
   padding: 1.4rem 1.6rem;
 }
 
-/* ===== Estado Venta Garage ===== */
+/* ===== Estado Venta Garage (alto contraste) ===== */
 .estado {
   display: inline-block;
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: 999px;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.4px;
 }
 
+/* BUENO → verde fuerte */
 .estado-bueno {
-  color: #166534;              /* verde oscuro */
-  background-color: #dcfce7;   /* verde claro */
+  color: #ffffff;              /* texto blanco */
+  background-color: #16a34a;   /* verde intenso */
+  box-shadow: 0 0 0 1px rgba(22,163,74,0.6);
 }
 
+/* REGULAR → amarillo intenso */
 .estado-regular {
-  color: #92400e;              /* amarillo oscuro */
-  background-color: #fef3c7;   /* amarillo claro */
+  color: #1f2933;              /* texto oscuro */
+  background-color: #facc15;   /* amarillo fuerte */
+  box-shadow: 0 0 0 1px rgba(250,204,21,0.6);
 }
