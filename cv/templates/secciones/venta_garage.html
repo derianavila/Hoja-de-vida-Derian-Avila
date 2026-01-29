@@ -12,7 +12,14 @@
 
         <div class="kv">
           {% if x.fecha %}<div><b>Fecha:</b> {{ x.fecha }}</div>{% endif %}
-          {% if x.estadoproducto %}<div><b>Estado:</b> {{ x.estadoproducto }}</div>{% endif %}
+          {% if x.estadoproducto %}
+            <div>
+              <b>Estado:</b>
+              <span class="estado estado-{{ x.estadoproducto|lower }}">
+                {{ x.estadoproducto }}
+              </span>
+            </div>
+          {% endif %}
           {% if x.valordelbien %}<div><b>Valor:</b> ${{ x.valordelbien }}</div>{% endif %}
           {% if x.descripcion %}<div><b>Descripción:</b> {{ x.descripcion }}</div>{% endif %}
         </div>

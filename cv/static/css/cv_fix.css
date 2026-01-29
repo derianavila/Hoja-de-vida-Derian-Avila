@@ -1441,3 +1441,22 @@ small, .muted{ color: rgba(255,255,255,.70); }
 .card {
   padding: 1.4rem 1.6rem;
 }
+
+/* ===== Estado Venta Garage ===== */
+.estado {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.estado-bueno {
+  color: #166534;              /* verde oscuro */
+  background-color: #dcfce7;   /* verde claro */
+}
+
+.estado-regular {
+  color: #92400e;              /* amarillo oscuro */
+  background-color: #fef3c7;   /* amarillo claro */
+}
