@@ -125,6 +125,112 @@ def venta_garage(request):
     items = perfil.venta_garage.filter(activarparaqueseveaenfront=True) if perfil else []
     return render(request, "secciones/venta_garage.html", {"perfil": perfil, "items": items})
 
+def imprimir_hoja_vida(request):
+    perfil = _get_perfil_activo()
+    if not perfil:
+        return HttpResponse("Perfil no encontrado", status=404)
+    if not perfil.permitir_impresion:
+        return HttpResponseForbidden("No autorizado", status=403)
+
+    FONT, FONT_B = _register_fonts()
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = 'inline; filename="hoja_de_vida.pdf"'
+
+    c = canvas.Canvas(response, pagesize=A4)
+    W, H = A4
+
+    azul_oscuro = colors.HexColor("#1f2a33")
+    gris = colors.HexColor("#6b7280")
+    negro = colors.HexColor("#111827")
+    blanco = colors.white
+
+    margin = 1.2 * cm
+    sidebar_w = 6 * cm
+    content_x = margin + sidebar_w + 0.8 * cm
+    content_w = W - content_x - margin
+
+    # SIDEBAR
+    c.setFillColor(azul_oscuro)
+    c.rect(0, 0, sidebar_w + margin, H, stroke=0, fill=1)
+
+    y = H - margin
+
+    # FOTO
+    img = _image_reader_from_field(perfil.foto_perfil)
+    if img:
+        c.saveState()
+        p = c.beginPath()
+        p.circle(margin + 3 * cm, y - 3 * cm, 2 * cm)
+        c.clipPath(p, stroke=0)
+        c.drawImage(img, margin + 1 * cm, y - 5 * cm, 4 * cm, 4 * cm, mask="auto")
+        c.restoreState()
+
+    y -= 6 * cm
+
+    c.setFillColor(blanco)
+    c.setFont(FONT_B, 14)
+    c.drawCentredString(margin + 3 * cm, y, f"{perfil.nombres} {perfil.apellidos}")
+
+    yR = H - margin
+
+    def titulo(txt):
+        nonlocal yR
+        c.setFillColor(negro)
+        c.setFont(FONT_B, 13)
+        c.drawString(content_x, yR, txt)
+        yR -= 0.6 * cm
+
+    def item(t, sub, desc):
+        nonlocal yR
+        c.setFont(FONT_B, 11)
+        c.drawString(content_x, yR, t)
+        yR -= 0.4 * cm
+
+        if sub:
+            c.setFont(FONT, 9)
+            c.setFillColor(gris)
+            yR = _draw_wrapped(c, sub, content_x, yR, content_w, FONT, 9, 12)
+        if desc:
+            yR -= 0.1 * cm
+            yR = _draw_wrapped(c, desc, content_x, yR, content_w, FONT, 9, 12)
+
+        yR -= 0.6 * cm
+        c.setFillColor(negro)
+
+    # RESUMEN
+    titulo("RESUMEN PROFESIONAL")
+    item("", "", perfil.descripcionperfil or " ")
+
+    # EXPERIENCIA
+    titulo("EXPERIENCIA LABORAL")
+    for e in perfil.experiencias.filter(activarparaqueseveaenfront=True):
+        item(
+            f"{e.cargodesempenado} — {e.nombrempresa}",
+            f"{e.fechainicio} → {e.fechafin}",
+            e.responsabilidades or e.descripcionfunciones,
+        )
+
+    # CURSOS
+    titulo("CURSOS / FORMACIÓN")
+    for c_ in perfil.cursos.filter(activarparaqueseveaenfront=True):
+        item(
+            c_.nombrecurso,
+            f"{c_.fechainicio} → {c_.fechafin} | {c_.entidadpatrocinadora}",
+            c_.descripcioncurso,
+        )
+
+    # RECONOCIMIENTOS
+    titulo("RECONOCIMIENTOS")
+    for r in perfil.reconocimientos.filter(activarparaqueseveaenfront=True):
+        item(
+            r.tiporeconocimiento,
+            r.entidadpatrocinadora,
+            r.descripcionreconocimiento,
+        )
+
+    c.showPage()
+    c.save()
+    return response
 
 # =========================
 # PDF CERTIFICADO (CORREGIDO)
