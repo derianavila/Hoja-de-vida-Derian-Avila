@@ -19,7 +19,10 @@
           <img class="prod-mini" src="{{ x.imagenproducto.url }}" alt="Producto">
         {% endif %}
 
-        <div class="cert-actions">
+        <div class="cert-row">
+          {% if x.certificado_imagen %}
+            <img class="cert-mini" src="{{ x.certificado_imagen.url }}" alt="Certificado">
+          {% endif %}
           {% if x.certificado_pdf %}
             <a class="btn-outline" target="_blank" href="{% url 'ver_certificado_pdf' x.idcursorealizado %}">Abrir PDF</a>
           {% endif %}

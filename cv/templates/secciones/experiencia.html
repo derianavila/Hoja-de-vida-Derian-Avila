@@ -18,7 +18,10 @@
           {% if x.descripcionfunciones %}<div><b>Funciones:</b> {{ x.descripcionfunciones }}</div>{% endif %}
         </div>
 
-        <div class="cert-actions">
+        <div class="cert-row">
+          {% if x.certificado_imagen %}
+            <img class="cert-mini" src="{{ x.certificado_imagen.url }}" alt="Certificado">
+          {% endif %}
           {% if x.certificado_pdf %}
             <a class="btn-outline" target="_blank" href="{% url 'ver_certificado_pdf' x.idcursorealizado %}">Abrir PDF</a>
           {% endif %}
@@ -32,3 +35,4 @@
   <a class="back-link" href="{% url 'home' %}">← Volver al inicio</a>
 </div>
 {% endblock %}
+

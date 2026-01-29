@@ -20,7 +20,6 @@ from .models import (
     Ventagarage,
 )
 
-
 # =========================
 # HELPERS
 # =========================
@@ -34,9 +33,11 @@ def _image_reader_from_field(image_field):
         return None
     try:
         if hasattr(image_field, "url"):
+            # Cloudinary / producción
             resp = requests.get(image_field.url, timeout=15)
             resp.raise_for_status()
             return ImageReader(io.BytesIO(resp.content))
+        # Local
         image_field.open("rb")
         return ImageReader(io.BytesIO(image_field.read()))
     except Exception as e:
@@ -132,7 +133,6 @@ def venta_garage(request):
 # =========================
 def imprimir_hoja_vida(request):
     perfil = _get_perfil_activo()
-
     if not perfil:
         return HttpResponse("Perfil no encontrado", status=404)
     if not perfil.permitir_impresion:
@@ -199,6 +199,7 @@ def imprimir_hoja_vida(request):
         if desc:
             yR -= 0.1 * cm
             yR = _draw_wrapped(c, desc, content_x, yR, content_w, FONT, 9, 12)
+
         yR -= 0.6 * cm
         c.setFillColor(negro)
 
@@ -241,5 +242,5 @@ def ver_certificado_pdf(request, curso_id):
     if not curso.certificado_pdf:
         raise Http404("Archivo no encontrado")
 
-    # REDIRECT a Cloudinary
+    # REDIRECT al PDF (Cloudinary o local)
     return redirect(curso.certificado_pdf.url)
