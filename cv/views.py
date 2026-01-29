@@ -1,10 +1,5 @@
 import io
 import requests
-# ==============================
-# IMPORTS CLOUDINARY (si usas Cloudinary)
-# ==============================
-import cloudinary
-import cloudinary.utils
 
 from django.http import HttpResponse, HttpResponseForbidden, Http404
 from django.shortcuts import render, get_object_or_404, redirect
@@ -38,11 +33,9 @@ def _image_reader_from_field(image_field):
         return None
     try:
         if hasattr(image_field, "url"):
-            # Cloudinary / producción
             resp = requests.get(image_field.url, timeout=15)
             resp.raise_for_status()
             return ImageReader(io.BytesIO(resp.content))
-        # Local
         image_field.open("rb")
         return ImageReader(io.BytesIO(image_field.read()))
     except Exception as e:
@@ -134,136 +127,16 @@ def venta_garage(request):
 
 
 # =========================
-# PDF – HOJA DE VIDA
-# =========================
-def imprimir_hoja_vida(request):
-    perfil = _get_perfil_activo()
-    if not perfil:
-        return HttpResponse("Perfil no encontrado", status=404)
-    if not perfil.permitir_impresion:
-        return HttpResponseForbidden("No autorizado", status=403)
-
-    FONT, FONT_B = _register_fonts()
-    response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = 'inline; filename="hoja_de_vida.pdf"'
-
-    c = canvas.Canvas(response, pagesize=A4)
-    W, H = A4
-
-    azul_oscuro = colors.HexColor("#1f2a33")
-    gris = colors.HexColor("#6b7280")
-    negro = colors.HexColor("#111827")
-    blanco = colors.white
-
-    margin = 1.2 * cm
-    sidebar_w = 6 * cm
-    content_x = margin + sidebar_w + 0.8 * cm
-    content_w = W - content_x - margin
-
-    # SIDEBAR
-    c.setFillColor(azul_oscuro)
-    c.rect(0, 0, sidebar_w + margin, H, stroke=0, fill=1)
-
-    y = H - margin
-
-    # FOTO
-    img = _image_reader_from_field(perfil.foto_perfil)
-    if img:
-        c.saveState()
-        p = c.beginPath()
-        p.circle(margin + 3 * cm, y - 3 * cm, 2 * cm)
-        c.clipPath(p, stroke=0)
-        c.drawImage(img, margin + 1 * cm, y - 5 * cm, 4 * cm, 4 * cm, mask="auto")
-        c.restoreState()
-
-    y -= 6 * cm
-
-    c.setFillColor(blanco)
-    c.setFont(FONT_B, 14)
-    c.drawCentredString(margin + 3 * cm, y, f"{perfil.nombres} {perfil.apellidos}")
-
-    yR = H - margin
-
-    def titulo(txt):
-        nonlocal yR
-        c.setFillColor(negro)
-        c.setFont(FONT_B, 13)
-        c.drawString(content_x, yR, txt)
-        yR -= 0.6 * cm
-
-    def item(t, sub, desc):
-        nonlocal yR
-        c.setFont(FONT_B, 11)
-        c.drawString(content_x, yR, t)
-        yR -= 0.4 * cm
-
-        if sub:
-            c.setFont(FONT, 9)
-            c.setFillColor(gris)
-            yR = _draw_wrapped(c, sub, content_x, yR, content_w, FONT, 9, 12)
-        if desc:
-            yR -= 0.1 * cm
-            yR = _draw_wrapped(c, desc, content_x, yR, content_w, FONT, 9, 12)
-
-        yR -= 0.6 * cm
-        c.setFillColor(negro)
-
-    # RESUMEN
-    titulo("RESUMEN PROFESIONAL")
-    item("", "", perfil.descripcionperfil or " ")
-
-    # EXPERIENCIA
-    for e in perfil.experiencias.filter(activarparaqueseveaenfront=True):
-        titulo("EXPERIENCIA LABORAL")
-        item(f"{e.cargodesempenado} — {e.nombrempresa}",
-             f"{e.fechainicio} → {e.fechafin}",
-             e.responsabilidades or e.descripcionfunciones)
-
-    # CURSOS
-    for c_ in perfil.cursos.filter(activarparaqueseveaenfront=True):
-        titulo("CURSOS / FORMACIÓN")
-        item(c_.nombrecurso,
-             f"{c_.fechainicio} → {c_.fechafin} | {c_.entidadpatrocinadora}",
-             c_.descripcioncurso)
-
-    # RECONOCIMIENTOS
-    for r in perfil.reconocimientos.filter(activarparaqueseveaenfront=True):
-        titulo("RECONOCIMIENTOS")
-        item(r.tiporeconocimiento,
-             r.entidadpatrocinadora,
-             r.descripcionreconocimiento)
-
-    c.showPage()
-    c.save()
-    return response
-
-
-# =========================
-# PDF CERTIFICADO (CLOUDINARY)
+# PDF CERTIFICADO (CORREGIDO)
 # =========================
 def ver_certificado_pdf(request, curso_id):
     """
-    Redirige al PDF del curso, usando URL firmada si es privado en Cloudinary.
+    Redirige directamente al PDF usando la URL real del FileField.
+    SIN raw, SIN authenticated, SIN firmas.
     """
     curso = get_object_or_404(Cursosrealizados, idcursorealizado=curso_id)
 
     if not curso.certificado_pdf:
         raise Http404("Archivo no encontrado")
 
-    url = curso.certificado_pdf.url
-
-    # Si el archivo está en Cloudinary
-    if "res.cloudinary.com" in url:
-        # Extraer public_id del archivo
-        public_id = url.split("/")[-1].split(".pdf")[0]
-
-        # Generar URL firmada temporal
-        url = cloudinary.utils.cloudinary_url(
-            f"media/certificados/{public_id}.pdf",
-            resource_type="raw",
-            type="authenticated",
-            sign_url=True
-        )[0]
-
-    # Redirigir al URL correcto
-    return redirect(url)
+    return redirect(curso.certificado_pdf.url)
