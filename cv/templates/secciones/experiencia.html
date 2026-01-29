@@ -8,32 +8,25 @@
   {% if items %}
     {% for x in items %}
       <div class="card">
-        <h2 class="card-title">{{ x.cargodesempenado }} — {{ x.nombrempresa }}</h2>
+        <h2 class="card-title">{{ x.cargodesempenado }}</h2>
 
         <div class="kv">
-          {% if x.fechainicio or x.fechafin %}
-            <div><b>Fechas:</b> {{ x.fechainicio }} {% if x.fechafin %}→ {{ x.fechafin }}{% endif %}</div>
-          {% endif %}
-          {% if x.descripcionfunciones %}<div><b>Funciones:</b> {{ x.descripcionfunciones }}</div>{% endif %}
+          {% if x.nombrempresa %}<div><b>Empresa:</b> {{ x.nombrempresa }}</div>{% endif %}
+          {% if x.lugarempresa %}<div><b>Lugar:</b> {{ x.lugarempresa }}</div>{% endif %}
+          {% if x.fechainicio or x.fechafin %}<div><b>Fechas:</b> {{ x.fechainicio }} {% if x.fechafin %}→ {{ x.fechafin }}{% endif %}</div>{% endif %}
           {% if x.responsabilidades %}<div><b>Responsabilidades:</b> {{ x.responsabilidades }}</div>{% endif %}
+          {% if x.descripcionfunciones %}<div><b>Funciones:</b> {{ x.descripcionfunciones }}</div>{% endif %}
         </div>
 
-        {% if x.certificado_pdf or x.certificado_imagen %}
-        <div class="cert-row">
+        <div class="cert-actions">
           {% if x.certificado_pdf %}
-            <iframe class="pdf-mini" src="{{ x.certificado_pdf.url }}#toolbar=0&navpanes=0&scrollbar=0" style="width:180px; height:220px;"></iframe>
-            <div class="cert-actions">
-              <a class="btn-outline" target="_blank" href="{{ x.certificado_pdf.url }}">Abrir PDF</a>
-            </div>
-          {% elif x.certificado_imagen %}
-            <img class="cert-mini" src="{{ x.certificado_imagen.url }}" alt="Certificado">
+            <a class="btn-outline" target="_blank" href="{% url 'ver_certificado_pdf' x.idcursorealizado %}">Abrir PDF</a>
           {% endif %}
         </div>
-        {% endif %}
       </div>
     {% endfor %}
   {% else %}
-    <p>No hay experiencia laboral para mostrar.</p>
+    <p>No hay experiencia para mostrar.</p>
   {% endif %}
 
   <a class="back-link" href="{% url 'home' %}">← Volver al inicio</a>

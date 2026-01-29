@@ -19,18 +19,11 @@
           <img class="prod-mini" src="{{ x.imagenproducto.url }}" alt="Producto">
         {% endif %}
 
-        {% if x.certificado_pdf or x.certificado_imagen %}
-        <div class="cert-row">
+        <div class="cert-actions">
           {% if x.certificado_pdf %}
-            <iframe class="pdf-mini" src="{{ x.certificado_pdf.url }}#toolbar=0&navpanes=0&scrollbar=0" style="width:180px; height:220px;"></iframe>
-            <div class="cert-actions">
-              <a class="btn-outline" target="_blank" href="{{ x.certificado_pdf.url }}">Abrir PDF</a>
-            </div>
-          {% elif x.certificado_imagen %}
-            <img class="cert-mini" src="{{ x.certificado_imagen.url }}" alt="Certificado">
+            <a class="btn-outline" target="_blank" href="{% url 'ver_certificado_pdf' x.idcursorealizado %}">Abrir PDF</a>
           {% endif %}
         </div>
-        {% endif %}
       </div>
     {% endfor %}
   {% else %}

@@ -12,34 +12,10 @@
 
         <div class="kv">
           {% if x.fecha %}<div><b>Fecha:</b> {{ x.fecha }}</div>{% endif %}
-          {% if x.estadoproducto %}
-            <div>
-              <b>Estado:</b>
-              <span class="estado estado-{{ x.estadoproducto|lower }}">
-                {{ x.estadoproducto }}
-              </span>
-            </div>
-          {% endif %}
-          {% if x.valordelbien is not None %}<div><b>Valor:</b> ${{ x.valordelbien }}</div>{% endif %}
+          {% if x.estadoproducto %}<div><b>Estado:</b> {{ x.estadoproducto }}</div>{% endif %}
+          {% if x.valordelbien %}<div><b>Valor:</b> ${{ x.valordelbien }}</div>{% endif %}
           {% if x.descripcion %}<div><b>Descripción:</b> {{ x.descripcion }}</div>{% endif %}
         </div>
-
-        {% if x.foto_producto %}
-          <img class="prod-mini" src="{{ x.foto_producto.url }}" alt="Foto producto">
-        {% endif %}
-
-        {% if x.certificado_pdf or x.certificado_imagen %}
-        <div class="cert-row">
-          {% if x.certificado_pdf %}
-            <iframe class="pdf-mini" src="{{ x.certificado_pdf.url }}#toolbar=0&navpanes=0&scrollbar=0" style="width:180px; height:220px;"></iframe>
-            <div class="cert-actions">
-              <a class="btn-outline" target="_blank" href="{{ x.certificado_pdf.url }}">Abrir PDF</a>
-            </div>
-          {% elif x.certificado_imagen %}
-            <img class="cert-mini" src="{{ x.certificado_imagen.url }}" alt="Certificado">
-          {% endif %}
-        </div>
-        {% endif %}
       </div>
     {% endfor %}
   {% else %}
