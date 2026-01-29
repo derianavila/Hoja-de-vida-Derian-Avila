@@ -39,6 +39,8 @@
         </div>
       </div>
     {% endfor %}
+  {% else %}
+    <p>No hay productos académicos para mostrar.</p>
   {% endif %}
 
   <a class="back-link" href="{% url 'home' %}">← Volver al inicio</a>

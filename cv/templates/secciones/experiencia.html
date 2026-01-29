@@ -39,6 +39,7 @@
 
           <div class="cert-actions">
             {% if x.certificado_pdf %}
+              <!-- Abrir PDF en nueva pestaña -->
               <a class="btn-outline" target="_blank" href="{{ x.certificado_pdf.url }}">Abrir PDF</a>
             {% endif %}
 
@@ -49,6 +50,8 @@
         </div>
       </div>
     {% endfor %}
+  {% else %}
+    <p>No hay experiencias registradas.</p>
   {% endif %}
 
   <a class="back-link" href="{% url 'home' %}">← Volver al inicio</a>

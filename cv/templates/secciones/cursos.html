@@ -27,13 +27,12 @@
         <div class="cert-row">
           {% if x.certificado_imagen %}
             <img class="cert-mini" src="{{ x.certificado_imagen.url }}" alt="Certificado">
-          {% elif x.certificado_pdf %}
-            <iframe class="pdf-mini" src="{{ x.certificado_pdf.url }}#toolbar=0&navpanes=0&scrollbar=0"></iframe>
           {% endif %}
 
           <div class="cert-actions">
             {% if x.certificado_pdf %}
-              <a class="btn-outline" target="_blank" href="{{ x.certificado_pdf.url }}">Abrir PDF</a>
+              <!-- Llama a la view que redirige al PDF en Cloudinary -->
+              <a class="btn-outline" target="_blank" href="{% url 'ver_certificado_pdf' x.idcursorealizado %}">Abrir PDF</a>
             {% endif %}
 
             {% if x.rutacertificado %}
@@ -43,6 +42,8 @@
         </div>
       </div>
     {% endfor %}
+  {% else %}
+    <p>No hay cursos registrados.</p>
   {% endif %}
 
   <a class="back-link" href="{% url 'home' %}">← Volver al inicio</a>

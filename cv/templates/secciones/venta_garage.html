@@ -11,31 +11,37 @@
         <h2 class="card-title">{{ x.nombreproducto }}</h2>
 
         <div class="kv">
-          {% if x.fecha %}
-            <div><b>Fecha:</b> {{ x.fecha }}</div>
-          {% endif %}
-
+          {% if x.fecha %}<div><b>Fecha:</b> {{ x.fecha }}</div>{% endif %}
           {% if x.estadoproducto %}
             <div>
               <b>Estado:</b>
-              <span class="estado estado-{{ x.estadoproducto|lower }}">
-                {{ x.estadoproducto }}
-              </span>
+              <span class="estado estado-{{ x.estadoproducto|lower }}">{{ x.estadoproducto }}</span>
             </div>
           {% endif %}
-
-          {% if x.valordelbien is not None %}
-            <div><b>Valor:</b> ${{ x.valordelbien }}</div>
-          {% endif %}
-
-          {% if x.descripcion %}
-            <div><b>Descripción:</b> {{ x.descripcion }}</div>
-          {% endif %}
+          {% if x.valordelbien is not None %}<div><b>Valor:</b> ${{ x.valordelbien }}</div>{% endif %}
+          {% if x.descripcion %}<div><b>Descripción:</b> {{ x.descripcion }}</div>{% endif %}
         </div>
 
         {% if x.foto_producto %}
           <img class="prod-mini" src="{{ x.foto_producto.url }}" alt="Foto producto">
         {% endif %}
+
+        <div class="cert-row">
+          {% if x.certificado_imagen %}
+            <img class="cert-mini" src="{{ x.certificado_imagen.url }}" alt="Certificado">
+          {% elif x.certificado_pdf %}
+            <iframe class="pdf-mini" src="{{ x.certificado_pdf.url }}#toolbar=0&navpanes=0&scrollbar=0"></iframe>
+          {% endif %}
+
+          <div class="cert-actions">
+            {% if x.certificado_pdf %}
+              <a class="btn-outline" target="_blank" href="{{ x.certificado_pdf.url }}">Abrir PDF</a>
+            {% endif %}
+            {% if x.rutacertificado %}
+              <a class="btn-outline" target="_blank" rel="noopener" href="{{ x.rutacertificado }}">Ver certificado</a>
+            {% endif %}
+          </div>
+        </div>
       </div>
     {% endfor %}
   {% else %}

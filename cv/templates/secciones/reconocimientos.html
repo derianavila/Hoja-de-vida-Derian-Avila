@@ -8,18 +8,14 @@
   {% if items %}
     {% for x in items %}
       <div class="card">
-        {% if x.tiporeconocimiento %}
-          <h2 class="card-title">{{ x.tiporeconocimiento }}</h2>
-        {% else %}
-          <h2 class="card-title">Reconocimiento</h2>
-        {% endif %}
+        <h2 class="card-title">
+          {{ x.tiporeconocimiento|default:"Reconocimiento" }}
+        </h2>
 
         <div class="kv">
           {% if x.entidadpatrocinadora %}<div><b>Entidad patrocinadora:</b> {{ x.entidadpatrocinadora }}</div>{% endif %}
           {% if x.fechareconocimiento %}<div><b>Fecha:</b> {{ x.fechareconocimiento }}</div>{% endif %}
-
           {% if x.descripcionreconocimiento %}<div><b>Descripción:</b> {{ x.descripcionreconocimiento }}</div>{% endif %}
-
           {% if x.nombrecontactoauspicia %}<div><b>Contacto:</b> {{ x.nombrecontactoauspicia }}</div>{% endif %}
           {% if x.telefonocontactoauspicia %}<div><b>Teléfono contacto:</b> {{ x.telefonocontactoauspicia }}</div>{% endif %}
         </div>

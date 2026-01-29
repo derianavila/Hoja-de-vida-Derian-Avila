@@ -25,6 +25,12 @@
         {% if perfil.direcciondomiciliaria %}<div><b>Dir. domicilio:</b> {{ perfil.direcciondomiciliaria }}</div>{% endif %}
         {% if perfil.sitioweb %}<div><b>Sitio web:</b> {{ perfil.sitioweb }}</div>{% endif %}
       </div>
+
+      {% if perfil.foto_perfil %}
+        <div class="foto-perfil">
+          <img src="{{ perfil.foto_perfil.url }}" alt="Foto perfil">
+        </div>
+      {% endif %}
     </div>
   {% else %}
     <p>No hay perfil activo.</p>

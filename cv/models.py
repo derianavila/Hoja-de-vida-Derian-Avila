@@ -205,16 +205,24 @@ class Datospersonales(models.Model):
 # MIXIN PARA CERTIFICADOS
 # =========================
 class CertificadoMixin(models.Model):
+    # PDF real
     certificado_pdf = models.FileField(
         upload_to="certificados/",
         blank=True,
         null=True,
         validators=[validar_pdf, FileExtensionValidator(["pdf"])],
     )
-    certificado_imagen = models.ImageField(upload_to="certificados/imagenes/", blank=True, null=True)
+    
+    # Imagen opcional para miniatura
+    certificado_imagen = models.ImageField(
+        upload_to="certificados/imagenes/",
+        blank=True,
+        null=True
+    )
 
     class Meta:
         abstract = True
+
 
 
 # =========================

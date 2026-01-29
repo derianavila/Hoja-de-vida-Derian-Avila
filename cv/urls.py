@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # Página principal
     path("", views.home, name="home"),
 
     # Secciones (para que no falle el {% url %} del template)
@@ -13,6 +14,9 @@ urlpatterns = [
     path("reconocimientos/", views.reconocimientos, name="reconocimientos"),
     path("venta-garage/", views.venta_garage, name="venta_garage"),
 
-    # PDF final
+    # PDF Hoja de vida (generado con ReportLab)
     path("imprimir/", views.imprimir_hoja_vida, name="imprimir_hoja_vida"),
+
+    # PDF Certificado (Cloudinary)
+    path("certificado/<int:curso_id>/", views.ver_certificado_pdf, name="ver_certificado_pdf"),
 ]
