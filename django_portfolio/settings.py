@@ -47,12 +47,9 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    # 'cloudinary_storage' DEBE ir antes de 'staticfiles'
     "cloudinary_storage",
     "django.contrib.staticfiles",
-
     "cv",
-
     "cloudinary",
 ]
 
@@ -138,11 +135,6 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# =====================
-# STATIC FILES
-# =====================
-STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # =========================
 # STORAGES (LOCAL vs RENDER)
@@ -162,8 +154,11 @@ if USE_CLOUDINARY:
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
-    # ESTA LÍNEA ES EL "PARCHE" PARA QUE RENDER NO DE ERROR
+    # Parche de compatibilidad para Cloudinary en Django 6.0
     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    
+    # Evita que el despliegue falle por archivos CSS con referencias rotas (como el admin dark mode)
+    WHITENOISE_MANIFEST_STRICT = False
 
 else:
     # LOCAL
@@ -177,7 +172,10 @@ else:
     }
 
 # =====================
-# MEDIA FILES
+# ARCHIVOS ESTÁTICOS Y MEDIA
 # =====================
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles" # Asegúrate de tener esta línea también
+
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
