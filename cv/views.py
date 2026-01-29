@@ -125,14 +125,34 @@ def venta_garage(request):
     items = perfil.venta_garage.filter(activarparaqueseveaenfront=True) if perfil else []
     return render(request, "secciones/venta_garage.html", {"perfil": perfil, "items": items})
 
+
 def imprimir_hoja_vida(request):
     perfil = _get_perfil_activo()
     if not perfil:
         return HttpResponse("Perfil no encontrado", status=404)
+
     if not perfil.permitir_impresion:
         return HttpResponseForbidden("No autorizado", status=403)
 
+    # =========================
+    # SECCIONES SELECCIONADAS
+    # =========================
+    qs = request.GET
+
+    show_exp       = "exp" in qs
+    show_cursos    = "cursos" in qs
+    show_reconoc   = "reconoc" in qs
+    show_prod_acad = "prod_acad" in qs
+    show_prod_lab  = "prod_lab" in qs
+    show_venta     = "venta" in qs
+
+    # Si no se selecciona NADA → no mostrar secciones
+    if not qs:
+        show_exp = show_cursos = show_reconoc = False
+        show_prod_acad = show_prod_lab = show_venta = False
+
     FONT, FONT_B = _register_fonts()
+
     response = HttpResponse(content_type="application/pdf")
     response["Content-Disposition"] = 'inline; filename="hoja_de_vida.pdf"'
 
@@ -149,7 +169,9 @@ def imprimir_hoja_vida(request):
     content_x = margin + sidebar_w + 0.8 * cm
     content_w = W - content_x - margin
 
+    # =========================
     # SIDEBAR
+    # =========================
     c.setFillColor(azul_oscuro)
     c.rect(0, 0, sidebar_w + margin, H, stroke=0, fill=1)
 
@@ -169,8 +191,15 @@ def imprimir_hoja_vida(request):
 
     c.setFillColor(blanco)
     c.setFont(FONT_B, 14)
-    c.drawCentredString(margin + 3 * cm, y, f"{perfil.nombres} {perfil.apellidos}")
+    c.drawCentredString(
+        margin + 3 * cm,
+        y,
+        f"{perfil.nombres} {perfil.apellidos}"
+    )
 
+    # =========================
+    # HELPERS DE CONTENIDO
+    # =========================
     yR = H - margin
 
     def titulo(txt):
@@ -190,6 +219,7 @@ def imprimir_hoja_vida(request):
             c.setFont(FONT, 9)
             c.setFillColor(gris)
             yR = _draw_wrapped(c, sub, content_x, yR, content_w, FONT, 9, 12)
+
         if desc:
             yR -= 0.1 * cm
             yR = _draw_wrapped(c, desc, content_x, yR, content_w, FONT, 9, 12)
@@ -197,40 +227,79 @@ def imprimir_hoja_vida(request):
         yR -= 0.6 * cm
         c.setFillColor(negro)
 
-    # RESUMEN
+    # =========================
+    # CONTENIDO PDF (CONDICIONAL)
+    # =========================
+
+    # RESUMEN (siempre)
     titulo("RESUMEN PROFESIONAL")
     item("", "", perfil.descripcionperfil or " ")
 
     # EXPERIENCIA
-    titulo("EXPERIENCIA LABORAL")
-    for e in perfil.experiencias.filter(activarparaqueseveaenfront=True):
-        item(
-            f"{e.cargodesempenado} — {e.nombrempresa}",
-            f"{e.fechainicio} → {e.fechafin}",
-            e.responsabilidades or e.descripcionfunciones,
-        )
+    if show_exp:
+        titulo("EXPERIENCIA LABORAL")
+        for e in perfil.experiencias.filter(activarparaqueseveaenfront=True):
+            item(
+                f"{e.cargodesempenado} — {e.nombrempresa}",
+                f"{e.fechainicio} → {e.fechafin}",
+                e.responsabilidades or e.descripcionfunciones,
+            )
 
     # CURSOS
-    titulo("CURSOS / FORMACIÓN")
-    for c_ in perfil.cursos.filter(activarparaqueseveaenfront=True):
-        item(
-            c_.nombrecurso,
-            f"{c_.fechainicio} → {c_.fechafin} | {c_.entidadpatrocinadora}",
-            c_.descripcioncurso,
-        )
+    if show_cursos:
+        titulo("CURSOS / FORMACIÓN")
+        for c_ in perfil.cursos.filter(activarparaqueseveaenfront=True):
+            item(
+                c_.nombrecurso,
+                f"{c_.fechainicio} → {c_.fechafin} | {c_.entidadpatrocinadora}",
+                c_.descripcioncurso,
+            )
 
     # RECONOCIMIENTOS
-    titulo("RECONOCIMIENTOS")
-    for r in perfil.reconocimientos.filter(activarparaqueseveaenfront=True):
-        item(
-            r.tiporeconocimiento,
-            r.entidadpatrocinadora,
-            r.descripcionreconocimiento,
-        )
+    if show_reconoc:
+        titulo("RECONOCIMIENTOS")
+        for r in perfil.reconocimientos.filter(activarparaqueseveaenfront=True):
+            item(
+                r.tiporeconocimiento,
+                r.entidadpatrocinadora,
+                r.descripcionreconocimiento,
+            )
+
+    # PRODUCTOS ACADÉMICOS
+    if show_prod_acad:
+        titulo("PRODUCTOS ACADÉMICOS")
+        for p in perfil.productos_academicos.filter(activarparaqueseveaenfront=True):
+            item(
+                p.nombreproducto,
+                p.entidad if hasattr(p, "entidad") else "",
+                p.descripcion,
+            )
+
+    # PRODUCTOS LABORALES
+    if show_prod_lab:
+        titulo("PRODUCTOS LABORALES")
+        for p in perfil.productos_laborales.filter(activarparaqueseveaenfront=True):
+            item(
+                p.nombreproducto,
+                "",
+                p.descripcion,
+            )
+
+    # VENTA GARAGE
+    if show_venta:
+        titulo("VENTA GARAGE")
+        for v in perfil.venta_garage.filter(activarparaqueseveaenfront=True):
+            item(
+                v.nombreproducto,
+                f"Estado: {v.estadoproducto} | $ {v.valordelbien}",
+                v.descripcion,
+            )
 
     c.showPage()
     c.save()
     return response
+
+
 
 # =========================
 # PDF CERTIFICADO (CORREGIDO)
