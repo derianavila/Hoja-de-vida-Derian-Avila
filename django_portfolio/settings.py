@@ -151,17 +151,16 @@ if USE_CLOUDINARY:
             "BACKEND": "cloudinary_storage.storage.RawMediaCloudinaryStorage",
         },
         "staticfiles": {
+            # Forzamos a WhiteNoise a ignorar archivos faltantes aquí mismo
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
-    # Parche de compatibilidad para Cloudinary en Django 6.0
+    # Mantenemos estas por compatibilidad total
     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-    
-    # Evita que el despliegue falle por archivos CSS con referencias rotas (como el admin dark mode)
     WHITENOISE_MANIFEST_STRICT = False
 
 else:
-    # LOCAL
+    # LOCAL (Sin cambios)
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -170,7 +169,6 @@ else:
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
     }
-
 # =====================
 # ARCHIVOS ESTÁTICOS Y MEDIA
 # =====================
