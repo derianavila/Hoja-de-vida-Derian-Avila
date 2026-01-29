@@ -242,10 +242,28 @@ def imprimir_hoja_vida(request):
 # PDF CERTIFICADO (CLOUDINARY)
 # =========================
 def ver_certificado_pdf(request, curso_id):
+    """
+    Redirige al PDF del curso, usando URL firmada si es privado en Cloudinary.
+    """
     curso = get_object_or_404(Cursosrealizados, idcursorealizado=curso_id)
 
     if not curso.certificado_pdf:
         raise Http404("Archivo no encontrado")
 
-    # REDIRECT al PDF (Cloudinary o local)
-    return redirect(curso.certificado_pdf.url)
+    url = curso.certificado_pdf.url
+
+    # Si el archivo está en Cloudinary
+    if "res.cloudinary.com" in url:
+        # Extraer public_id del archivo
+        public_id = url.split("/")[-1].split(".pdf")[0]
+
+        # Generar URL firmada temporal
+        url = cloudinary.utils.cloudinary_url(
+            f"media/certificados/{public_id}.pdf",
+            resource_type="raw",
+            type="authenticated",
+            sign_url=True
+        )[0]
+
+    # Redirigir al URL correcto
+    return redirect(url)
