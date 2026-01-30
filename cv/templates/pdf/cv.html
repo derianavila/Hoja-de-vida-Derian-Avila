@@ -130,9 +130,9 @@
   <!-- ===== SIDEBAR ===== -->
   <aside class="sidebar">
 
-    {% if perfil.foto %}
+    {% if perfil.foto_perfil %}
     <div class="photo">
-      <img src="{{ perfil.foto.url }}" alt="Foto de perfil">
+      <img src="{{ perfil.foto_perfil.url }}" alt="Foto de perfil">
     </div>
     {% endif %}
 
@@ -164,7 +164,10 @@
       {% for x in perfil.experiencias.all %}
       <div class="item">
         <div class="item-title">{{ x.cargodesempenado }} — {{ x.nombrempresa }}</div>
-        <div class="item-sub">{{ x.fechainicio }} → {% if x.fechafin %}{{ x.fechafin }}{% else %}Actualidad{% endif %}</div>
+        <div class="item-sub">
+          {{ x.fechainicio }} →
+          {% if x.fechafin %}{{ x.fechafin }}{% else %}Actualidad{% endif %}
+        </div>
         {% if x.responsabilidades %}
           <div class="item-desc">{{ x.responsabilidades }}</div>
         {% endif %}
