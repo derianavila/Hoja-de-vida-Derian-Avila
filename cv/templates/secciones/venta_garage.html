@@ -1,9 +1,40 @@
 {% extends "base.html" %}
-{% block title %}Venta garage{% endblock %}
+{% block title %}Venta Garage{% endblock %}
 
 {% block content %}
+
+<style>
+/* ===== ESTADO PRODUCTO ===== */
+.estado {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-left: 6px;
+}
+
+.estado-bueno {
+  background: #16a34a;   /* verde claro */
+  color: #ffff;        /* verde oscuro */
+}
+
+.estado-regular {
+  background: #facc15;   /* amarillo claro */
+  color: #f3f3f3;        /* amarillo oscuro */
+}
+
+/* ===== IMAGEN PRODUCTO ===== */
+.producto-img {
+  max-width: 220px;
+  border-radius: 10px;
+  margin-top: 10px;
+  border: 1px solid #e5e7eb;
+}
+</style>
+
 <div class="sec-shell">
-  <h1 class="sec-title">🏷️ Venta garage</h1>
+  <h1 class="sec-title">🛒 Venta Garage</h1>
 
   {% if items %}
     {% for x in items %}
@@ -11,24 +42,45 @@
         <h2 class="card-title">{{ x.nombreproducto }}</h2>
 
         <div class="kv">
-          {% if x.fecha %}<div><b>Fecha:</b> {{ x.fecha }}</div>{% endif %}
-          {% if x.estadoproducto %}
-            <div>
-              <b>Estado:</b>
-              <span class="estado estado-{{ x.estadoproducto|lower }}">
-                {{ x.estadoproducto }}
-              </span>
-            </div>
+
+          <!-- ESTADO CON COLOR -->
+          <div>
+            <b>Estado:</b>
+            {% if x.estadoproducto == "BUENO" %}
+              <span class="estado estado-bueno">Bueno</span>
+            {% elif x.estadoproducto == "REGULAR" %}
+              <span class="estado estado-regular">Regular</span>
+            {% endif %}
+          </div>
+
+          {% if x.valordelbien %}
+            <div><b>Precio:</b> ${{ x.valordelbien }}</div>
           {% endif %}
-          {% if x.valordelbien %}<div><b>Valor:</b> ${{ x.valordelbien }}</div>{% endif %}
-          {% if x.descripcion %}<div><b>Descripción:</b> {{ x.descripcion }}</div>{% endif %}
+
+          {% if x.fecha %}
+            <div><b>Fecha:</b> {{ x.fecha }}</div>
+          {% endif %}
+
+          {% if x.descripcion %}
+            <div><b>Descripción:</b> {{ x.descripcion }}</div>
+          {% endif %}
         </div>
+
+        <!-- IMAGEN DEL PRODUCTO -->
+        {% if x.foto_producto %}
+          <img
+            class="producto-img"
+            src="{{ x.foto_producto.url }}"
+            alt="Imagen de {{ x.nombreproducto }}"
+          >
+        {% endif %}
       </div>
     {% endfor %}
   {% else %}
-    <p>No hay productos en venta garage.</p>
+    <p>No hay productos en venta.</p>
   {% endif %}
 
   <a class="back-link" href="{% url 'home' %}">← Volver al inicio</a>
 </div>
+
 {% endblock %}

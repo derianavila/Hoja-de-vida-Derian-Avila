@@ -90,3 +90,10 @@
   transform: translateY(-1px);
   box-shadow: 0 16px 34px rgba(0,0,0,.28), 0 0 0 1px var(--glow);
 }
+
+.pdf-thumb {
+  width: 140px;
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}

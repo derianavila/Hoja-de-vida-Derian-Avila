@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Experiencia{% endblock %}
 
 {% block content %}
@@ -11,21 +12,50 @@
         <h2 class="card-title">{{ x.cargodesempenado }}</h2>
 
         <div class="kv">
-          {% if x.nombrempresa %}<div><b>Empresa:</b> {{ x.nombrempresa }}</div>{% endif %}
-          {% if x.lugarempresa %}<div><b>Lugar:</b> {{ x.lugarempresa }}</div>{% endif %}
-          {% if x.fechainicio or x.fechafin %}<div><b>Fechas:</b> {{ x.fechainicio }} {% if x.fechafin %}→ {{ x.fechafin }}{% endif %}</div>{% endif %}
-          {% if x.responsabilidades %}<div><b>Responsabilidades:</b> {{ x.responsabilidades }}</div>{% endif %}
-          {% if x.descripcionfunciones %}<div><b>Funciones:</b> {{ x.descripcionfunciones }}</div>{% endif %}
+          {% if x.nombrempresa %}
+            <div><b>Empresa:</b> {{ x.nombrempresa }}</div>
+          {% endif %}
+
+          {% if x.fechainicio or x.fechafin %}
+            <div>
+              <b>Fechas:</b>
+              {{ x.fechainicio }}
+              {% if x.fechafin %}→ {{ x.fechafin }}{% else %}→ Actualidad{% endif %}
+            </div>
+          {% endif %}
+
+          {% if x.responsabilidades %}
+            <div><b>Responsabilidades:</b> {{ x.responsabilidades }}</div>
+          {% endif %}
         </div>
 
+        <!-- 🔽 MISMA LÓGICA QUE CURSOS -->
         <div class="cert-row">
           {% if x.certificado_imagen %}
-            <img class="cert-mini" src="{{ x.certificado_imagen.url }}" alt="Certificado">
+            <img
+              class="cert-mini"
+              src="{{ x.certificado_imagen.url }}"
+              alt="Certificado"
+            >
+          {% elif x.certificado_pdf %}
+            <img
+              class="cert-mini"
+              src="{% static 'img/pdf-thumb.png' %}"
+              alt="Documento PDF"
+            >
           {% endif %}
+
           {% if x.certificado_pdf %}
-            <a class="btn-outline" target="_blank" href="{% url 'ver_certificado_pdf' x.idcursorealizado %}">Abrir PDF</a>
+            <a
+              class="btn-outline"
+              target="_blank"
+              href="{% url 'ver_certificado_pdf' 'experiencia' x.idexperiencialaboral %}"
+            >
+              Abrir PDF
+            </a>
           {% endif %}
         </div>
+
       </div>
     {% endfor %}
   {% else %}
@@ -35,4 +65,3 @@
   <a class="back-link" href="{% url 'home' %}">← Volver al inicio</a>
 </div>
 {% endblock %}
-

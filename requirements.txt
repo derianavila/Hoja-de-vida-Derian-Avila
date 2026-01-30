@@ -10,3 +10,4 @@ requests
 reportlab
 cloudinary
 django-cloudinary-storage
+weasyprint

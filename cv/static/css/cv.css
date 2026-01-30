@@ -1,0 +1,76 @@
+@page {
+  size: A4;
+  margin: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  color: #1f2937;
+}
+
+.cv {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 30%;
+  background: #4b5f6d;
+  color: white;
+  padding: 30px;
+  text-align: center;
+}
+
+.avatar {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 15px;
+}
+
+.name {
+  margin: 10px 0 5px;
+}
+
+.role {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.contact {
+  margin-top: 20px;
+  font-size: 12px;
+  text-align: left;
+}
+
+.content {
+  width: 70%;
+  padding: 40px;
+}
+
+section {
+  margin-bottom: 25px;
+}
+
+h2 {
+  border-bottom: 2px solid #111;
+  padding-bottom: 4px;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+.item {
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.muted {
+  color: #6b7280;
+  font-size: 11px;
+}
+
+.dates {
+  font-size: 11px;
+  color: #374151;
+}

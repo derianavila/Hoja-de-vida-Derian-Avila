@@ -1465,3 +1465,25 @@ small, .muted{ color: rgba(255,255,255,.70); }
   background-color: #facc15;   /* amarillo fuerte */
   box-shadow: 0 0 0 1px rgba(250,204,21,0.6);
 }
+
+
+.pdf-mini {
+  margin-top: 10px;
+  width: 180px;
+}
+
+.pdf-frame {
+  width: 180px;
+  height: 220px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+}
+
+
+.pdf-thumb {
+  width: 140px;
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}

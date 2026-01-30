@@ -263,6 +263,7 @@
       e.preventDefault();
 
       const params = new URLSearchParams();
+      params.set("sel", "1");
       keys.forEach(k=>{
         const el = form.querySelector(`input[name="${k}"]`);
         if(el && el.checked) params.set(k, "1");

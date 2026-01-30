@@ -11,5 +11,10 @@ urlpatterns = [
     path("reconocimientos/", views.reconocimientos, name="reconocimientos"),
     path("venta-garage/", views.venta_garage, name="venta_garage"),
     path("imprimir/", views.imprimir_hoja_vida, name="imprimir_hoja_vida"),
-    path("ver-certificado/<int:curso_id>/", views.ver_certificado_pdf, name="ver_certificado_pdf"),
+    path(
+        "ver-certificado/<str:tipo>/<int:obj_id>/",
+        views.ver_certificado_pdf,
+        name="ver_certificado_pdf"
+    ),
+
 ]

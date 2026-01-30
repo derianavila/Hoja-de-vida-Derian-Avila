@@ -22,7 +22,7 @@
             <img class="cert-mini" src="{{ x.certificado_imagen.url }}" alt="Certificado">
           {% endif %}
           {% if x.certificado_pdf %}
-            <a class="btn-outline" target="_blank" href="{% url 'ver_certificado_pdf' x.idcursorealizado %}">Abrir PDF</a>
+            <a class="btn-outline" target="_blank" href="{% url 'ver_certificado_pdf' 'curso' x.idcursorealizado %}">Abrir PDF</a>
           {% endif %}
         </div>
       </div>

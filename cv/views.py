@@ -1,3 +1,4 @@
+# cv/views.py
 import io
 import requests
 
@@ -9,6 +10,16 @@ from reportlab.lib.units import cm
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader, simpleSplit
+
+
+from django.template.loader import render_to_string
+from weasyprint import HTML
+from django.conf import settings
+
+
+
+# ✅ Para unir PDFs reales al final (tamaño original)
+from PyPDF2 import PdfReader, PdfWriter
 
 from .models import (
     Datospersonales,
@@ -33,17 +44,38 @@ def _image_reader_from_field(image_field):
         return None
     try:
         if hasattr(image_field, "url"):
-            resp = requests.get(image_field.url, timeout=15)
+            resp = requests.get(image_field.url, timeout=20)
             resp.raise_for_status()
             return ImageReader(io.BytesIO(resp.content))
         image_field.open("rb")
         return ImageReader(io.BytesIO(image_field.read()))
-    except Exception as e:
-        print("❌ Error cargando imagen en PDF:", e)
+    except Exception:
         return None
     finally:
         try:
             image_field.close()
+        except Exception:
+            pass
+
+
+def _read_pdf_bytes(file_field):
+    """Lee un FileField PDF (Cloudinary o local) y devuelve bytes."""
+    if not file_field:
+        return None
+    try:
+        # Cloud/remote
+        if hasattr(file_field, "url"):
+            resp = requests.get(file_field.url, timeout=25)
+            resp.raise_for_status()
+            return resp.content
+        # Local
+        file_field.open("rb")
+        return file_field.read()
+    except Exception:
+        return None
+    finally:
+        try:
+            file_field.close()
         except Exception:
             pass
 
@@ -60,6 +92,77 @@ def _draw_wrapped(c, text, x, y, max_width, font, size, leading):
         c.drawString(x, y, ln)
         y -= leading
     return y
+
+
+def _draw_image_if_exists(c, image_field, x, y, w=5*cm, h=3.2*cm):
+    img = _image_reader_from_field(image_field)
+    if img:
+        c.drawImage(img, x, y - h, w, h, preserveAspectRatio=True, mask="auto")
+        return y - h - 0.35 * cm
+    return y
+
+
+def _collect_pdfs(perfil, show):
+    """
+    Devuelve lista de bytes de PDFs, SOLO de secciones marcadas (A).
+    show: dict con flags booleans.
+    """
+    pdfs = []
+
+    def add_pdf(field):
+        b = _read_pdf_bytes(field)
+        if b:
+            pdfs.append(b)
+
+    if show.get("cursos"):
+        for x in perfil.cursos.filter(activarparaqueseveaenfront=True):
+            if x.certificado_pdf:
+                add_pdf(x.certificado_pdf)
+
+    if show.get("exp"):
+        for x in perfil.experiencias.filter(activarparaqueseveaenfront=True):
+            if x.certificado_pdf:
+                add_pdf(x.certificado_pdf)
+
+    if show.get("reconoc"):
+        for x in perfil.reconocimientos.filter(activarparaqueseveaenfront=True):
+            if x.certificado_pdf:
+                add_pdf(x.certificado_pdf)
+
+    if show.get("prod_acad"):
+        for x in perfil.productos_academicos.filter(activarparaqueseveaenfront=True):
+            if x.certificado_pdf:
+                add_pdf(x.certificado_pdf)
+
+    if show.get("prod_lab"):
+        for x in perfil.productos_laborales.filter(activarparaqueseveaenfront=True):
+            if x.certificado_pdf:
+                add_pdf(x.certificado_pdf)
+
+    # Ventagarage no tiene certificado_pdf en tu modelo (solo foto_producto)
+    return pdfs
+
+
+def _merge_pdfs(base_pdf_bytes, attachments_bytes_list):
+    """Une: CV base + (PDFs adjuntos) como páginas reales."""
+    writer = PdfWriter()
+
+    base_reader = PdfReader(io.BytesIO(base_pdf_bytes))
+    for p in base_reader.pages:
+        writer.add_page(p)
+
+    for pdf_bytes in attachments_bytes_list:
+        try:
+            r = PdfReader(io.BytesIO(pdf_bytes))
+            for p in r.pages:
+                writer.add_page(p)
+        except Exception:
+            # Si un PDF está corrupto o no descargó bien, lo saltamos
+            continue
+
+    out = io.BytesIO()
+    writer.write(out)
+    return out.getvalue()
 
 
 # =========================
@@ -126,192 +229,56 @@ def venta_garage(request):
     return render(request, "secciones/venta_garage.html", {"perfil": perfil, "items": items})
 
 
+# =========================
+# PDF FINAL DEL CV + ADJUNTOS REALES
+# =========================
 def imprimir_hoja_vida(request):
     perfil = _get_perfil_activo()
-    if not perfil:
-        return HttpResponse("Perfil no encontrado", status=404)
+    if not perfil or not perfil.permitir_impresion:
+        return HttpResponseForbidden()
 
-    if not perfil.permitir_impresion:
-        return HttpResponseForbidden("No autorizado", status=403)
-
-    # =========================
-    # SECCIONES SELECCIONADAS
-    # =========================
     qs = request.GET
+    show = {
+        "exp": "exp" in qs or not qs,
+        "cursos": "cursos" in qs or not qs,
+        "reconoc": "reconoc" in qs or not qs,
+    }
 
-    show_exp       = "exp" in qs
-    show_cursos    = "cursos" in qs
-    show_reconoc   = "reconoc" in qs
-    show_prod_acad = "prod_acad" in qs
-    show_prod_lab  = "prod_lab" in qs
-    show_venta     = "venta" in qs
+    html = render_to_string("pdf/cv.html", {
+        "perfil": perfil,
+        "show": show,
+        "css_url": request.build_absolute_uri(
+            settings.STATIC_URL + "css/cv.css"
+        )
+    })
 
-    # Si no se selecciona NADA → no mostrar secciones
-    if not qs:
-        show_exp = show_cursos = show_reconoc = False
-        show_prod_acad = show_prod_lab = show_venta = False
+    pdf = HTML(string=html, base_url=request.build_absolute_uri()).write_pdf()
 
-    FONT, FONT_B = _register_fonts()
-
-    response = HttpResponse(content_type="application/pdf")
+    # ⬇️ aquí luego vuelves a unir los PDFs adjuntos (ya lo tienes hecho)
+    response = HttpResponse(pdf, content_type="application/pdf")
     response["Content-Disposition"] = 'inline; filename="hoja_de_vida.pdf"'
-
-    c = canvas.Canvas(response, pagesize=A4)
-    W, H = A4
-
-    azul_oscuro = colors.HexColor("#1f2a33")
-    gris = colors.HexColor("#6b7280")
-    negro = colors.HexColor("#111827")
-    blanco = colors.white
-
-    margin = 1.2 * cm
-    sidebar_w = 6 * cm
-    content_x = margin + sidebar_w + 0.8 * cm
-    content_w = W - content_x - margin
-
-    # =========================
-    # SIDEBAR
-    # =========================
-    c.setFillColor(azul_oscuro)
-    c.rect(0, 0, sidebar_w + margin, H, stroke=0, fill=1)
-
-    y = H - margin
-
-    # FOTO
-    img = _image_reader_from_field(perfil.foto_perfil)
-    if img:
-        c.saveState()
-        p = c.beginPath()
-        p.circle(margin + 3 * cm, y - 3 * cm, 2 * cm)
-        c.clipPath(p, stroke=0)
-        c.drawImage(img, margin + 1 * cm, y - 5 * cm, 4 * cm, 4 * cm, mask="auto")
-        c.restoreState()
-
-    y -= 6 * cm
-
-    c.setFillColor(blanco)
-    c.setFont(FONT_B, 14)
-    c.drawCentredString(
-        margin + 3 * cm,
-        y,
-        f"{perfil.nombres} {perfil.apellidos}"
-    )
-
-    # =========================
-    # HELPERS DE CONTENIDO
-    # =========================
-    yR = H - margin
-
-    def titulo(txt):
-        nonlocal yR
-        c.setFillColor(negro)
-        c.setFont(FONT_B, 13)
-        c.drawString(content_x, yR, txt)
-        yR -= 0.6 * cm
-
-    def item(t, sub, desc):
-        nonlocal yR
-        c.setFont(FONT_B, 11)
-        c.drawString(content_x, yR, t)
-        yR -= 0.4 * cm
-
-        if sub:
-            c.setFont(FONT, 9)
-            c.setFillColor(gris)
-            yR = _draw_wrapped(c, sub, content_x, yR, content_w, FONT, 9, 12)
-
-        if desc:
-            yR -= 0.1 * cm
-            yR = _draw_wrapped(c, desc, content_x, yR, content_w, FONT, 9, 12)
-
-        yR -= 0.6 * cm
-        c.setFillColor(negro)
-
-    # =========================
-    # CONTENIDO PDF (CONDICIONAL)
-    # =========================
-
-    # RESUMEN (siempre)
-    titulo("RESUMEN PROFESIONAL")
-    item("", "", perfil.descripcionperfil or " ")
-
-    # EXPERIENCIA
-    if show_exp:
-        titulo("EXPERIENCIA LABORAL")
-        for e in perfil.experiencias.filter(activarparaqueseveaenfront=True):
-            item(
-                f"{e.cargodesempenado} — {e.nombrempresa}",
-                f"{e.fechainicio} → {e.fechafin}",
-                e.responsabilidades or e.descripcionfunciones,
-            )
-
-    # CURSOS
-    if show_cursos:
-        titulo("CURSOS / FORMACIÓN")
-        for c_ in perfil.cursos.filter(activarparaqueseveaenfront=True):
-            item(
-                c_.nombrecurso,
-                f"{c_.fechainicio} → {c_.fechafin} | {c_.entidadpatrocinadora}",
-                c_.descripcioncurso,
-            )
-
-    # RECONOCIMIENTOS
-    if show_reconoc:
-        titulo("RECONOCIMIENTOS")
-        for r in perfil.reconocimientos.filter(activarparaqueseveaenfront=True):
-            item(
-                r.tiporeconocimiento,
-                r.entidadpatrocinadora,
-                r.descripcionreconocimiento,
-            )
-
-    # PRODUCTOS ACADÉMICOS
-    if show_prod_acad:
-        titulo("PRODUCTOS ACADÉMICOS")
-        for p in perfil.productos_academicos.filter(activarparaqueseveaenfront=True):
-            item(
-                p.nombreproducto,
-                p.entidad if hasattr(p, "entidad") else "",
-                p.descripcion,
-            )
-
-    # PRODUCTOS LABORALES
-    if show_prod_lab:
-        titulo("PRODUCTOS LABORALES")
-        for p in perfil.productos_laborales.filter(activarparaqueseveaenfront=True):
-            item(
-                p.nombreproducto,
-                "",
-                p.descripcion,
-            )
-
-    # VENTA GARAGE
-    if show_venta:
-        titulo("VENTA GARAGE")
-        for v in perfil.venta_garage.filter(activarparaqueseveaenfront=True):
-            item(
-                v.nombreproducto,
-                f"Estado: {v.estadoproducto} | $ {v.valordelbien}",
-                v.descripcion,
-            )
-
-    c.showPage()
-    c.save()
     return response
-
-
-
 # =========================
-# PDF CERTIFICADO (CORREGIDO)
+# VISOR PDF INDIVIDUAL
 # =========================
-def ver_certificado_pdf(request, curso_id):
-    """
-    Redirige directamente al PDF usando la URL real del FileField.
-    SIN raw, SIN authenticated, SIN firmas.
-    """
-    curso = get_object_or_404(Cursosrealizados, idcursorealizado=curso_id)
+def ver_certificado_pdf(request, tipo, obj_id):
+    MAP = {
+        "curso": (Cursosrealizados, "idcursorealizado"),
+        "experiencia": (Experiencialaboral, "idexperiencialaboral"),
+        "reconocimiento": (Reconocimientos, "idreconocimiento"),
+        "prod_acad": (Productosacademicos, "idproductoacademico"),
+        "prod_lab": (Productoslaborales, "idproductolaboral"),
+    }
 
-    if not curso.certificado_pdf:
-        raise Http404("Archivo no encontrado")
+    if tipo not in MAP:
+        raise Http404("Tipo de certificado inválido")
 
-    return redirect(curso.certificado_pdf.url)
+    model, field = MAP[tipo]
+
+    obj = get_object_or_404(model, **{field: obj_id})
+
+    if not getattr(obj, "certificado_pdf", None):
+        raise Http404("Este registro no tiene PDF")
+
+    return redirect(obj.certificado_pdf.url)
+
