@@ -242,15 +242,37 @@ def imprimir_hoja_vida(request):
         "exp": "exp" in qs or not qs,
         "cursos": "cursos" in qs or not qs,
         "reconoc": "reconoc" in qs or not qs,
+        "prod_acad": "prod_acad" in qs or not qs,
+        "prod_lab": "prod_lab" in qs or not qs,
     }
 
-    html = render_to_string("pdf/cv.html", {
-        "perfil": perfil,
-        "show": show,
-        "css_url": request.build_absolute_uri(
-            settings.STATIC_URL + "css/cv.css"
-        )
-    })
+    # 🔹 Renderiza el NUEVO HTML del CV
+    html = render_to_string(
+        "cv/hoja_vida.html",
+        {
+            "perfil": perfil,
+            "show": show,
+        }
+    )
+
+    # 🔹 Genera el PDF base (CV)
+    base_pdf = HTML(
+        string=html,
+        base_url=request.build_absolute_uri()
+    ).write_pdf()
+
+    # 🔹 Recolecta PDFs adjuntos reales según secciones visibles
+    attachments = _collect_pdfs(perfil, show)
+
+    # 🔹 Une CV + adjuntos (si existen)
+    if attachments:
+        final_pdf = _merge_pdfs(base_pdf, attachments)
+    else:
+        final_pdf = base_pdf
+
+    response = HttpResponse(final_pdf, content_type="application/pdf")
+    response["Content-Disposition"] = 'inline; filename="hoja_de_vida.pdf"'
+    return response
 
     pdf = HTML(string=html, base_url=request.build_absolute_uri()).write_pdf()
 
