@@ -11,59 +11,75 @@
   }
 
   body {
-    font-family: "Helvetica", Arial, sans-serif;
-    color: #111827;
+    font-family: Helvetica, Arial, sans-serif;
     font-size: 11px;
+    color: #111827;
     line-height: 1.5;
   }
 
   h1, h2, h3 {
     margin: 0;
-    padding: 0;
   }
 
   /* ===== LAYOUT ===== */
   .page {
     display: grid;
-    grid-template-columns: 30% 70%;
-    gap: 20px;
+    grid-template-columns: 32% 68%;
+    min-height: 100vh;
   }
 
   /* ===== SIDEBAR ===== */
   .sidebar {
     background: #1f2a33;
     color: #ffffff;
-    padding: 20px;
+    padding: 25px 20px;
   }
 
-  .sidebar h1 {
-    font-size: 18px;
-    margin-bottom: 10px;
-  }
-
-  .sidebar .subtitle {
-    font-size: 12px;
-    opacity: 0.85;
-    margin-bottom: 20px;
-  }
-
-  .sidebar .block {
+  .photo {
+    text-align: center;
     margin-bottom: 18px;
   }
 
-  .sidebar .label {
+  .photo img {
+    width: 110px;
+    height: 110px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid #ffffff;
+  }
+
+  .name {
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .subtitle {
+    font-size: 11px;
+    text-align: center;
+    opacity: 0.85;
+    margin-bottom: 18px;
+  }
+
+  .side-block {
+    margin-bottom: 18px;
+  }
+
+  .side-title {
     font-size: 10px;
     text-transform: uppercase;
     opacity: 0.7;
+    margin-bottom: 6px;
   }
 
-  .sidebar .value {
+  .side-value {
     font-size: 11px;
+    margin-bottom: 4px;
   }
 
-  /* ===== MAIN CONTENT ===== */
+  /* ===== CONTENT ===== */
   .content {
-    padding: 10px 20px;
+    padding: 25px 30px;
   }
 
   .section {
@@ -81,12 +97,12 @@
   }
 
   .item {
-    margin-bottom: 10px;
+    margin-bottom: 12px;
   }
 
   .item-title {
-    font-weight: bold;
     font-size: 11.5px;
+    font-weight: bold;
   }
 
   .item-sub {
@@ -99,17 +115,11 @@
     margin-top: 2px;
   }
 
-  /* ===== CERTIFICADOS ===== */
-  .certificates {
-    margin-top: 8px;
+  .cert {
     font-size: 10px;
     color: #374151;
+    margin-top: 3px;
   }
-
-  .cert {
-    margin-left: 10px;
-  }
-
 </style>
 </head>
 
@@ -118,34 +128,33 @@
 <div class="page">
 
   <!-- ===== SIDEBAR ===== -->
-  <div class="sidebar">
+  <aside class="sidebar">
 
-    <h1>{{ perfil.nombres }} {{ perfil.apellidos }}</h1>
+    {% if perfil.foto %}
+    <div class="photo">
+      <img src="{{ perfil.foto.url }}" alt="Foto de perfil">
+    </div>
+    {% endif %}
+
+    <div class="name">{{ perfil.nombres }} {{ perfil.apellidos }}</div>
+
     {% if perfil.descripcionperfil %}
       <div class="subtitle">{{ perfil.descripcionperfil }}</div>
     {% endif %}
 
-    <div class="block">
-      <div class="label">Cédula</div>
-      <div class="value">{{ perfil.numerocedula }}</div>
+    <div class="side-block">
+      <div class="side-title">Datos personales</div>
+      {% if perfil.numerocedula %}<div class="side-value"><b>Cédula:</b> {{ perfil.numerocedula }}</div>{% endif %}
+      {% if perfil.fechanacimiento %}<div class="side-value"><b>Nacimiento:</b> {{ perfil.fechanacimiento }}</div>{% endif %}
+      {% if perfil.nacionalidad %}<div class="side-value"><b>Nacionalidad:</b> {{ perfil.nacionalidad }}</div>{% endif %}
+      {% if perfil.sexo %}<div class="side-value"><b>Sexo:</b> {{ perfil.sexo }}</div>{% endif %}
+      {% if perfil.estadocivil %}<div class="side-value"><b>Estado civil:</b> {{ perfil.estadocivil }}</div>{% endif %}
     </div>
 
-    <div class="block">
-      <div class="label">Nacimiento</div>
-      <div class="value">{{ perfil.fechanacimiento }}</div>
-    </div>
+  </aside>
 
-    {% if perfil.nacionalidad %}
-    <div class="block">
-      <div class="label">Nacionalidad</div>
-      <div class="value">{{ perfil.nacionalidad }}</div>
-    </div>
-    {% endif %}
-
-  </div>
-
-  <!-- ===== MAIN ===== -->
-  <div class="content">
+  <!-- ===== CONTENT ===== -->
+  <main class="content">
 
     <!-- EXPERIENCIA -->
     {% if show.exp %}
@@ -153,19 +162,16 @@
       <div class="section-title">Experiencia Laboral</div>
 
       {% for x in perfil.experiencias.all %}
-        <div class="item">
-          <div class="item-title">{{ x.cargodesempenado }} — {{ x.nombrempresa }}</div>
-          <div class="item-sub">{{ x.fechainicio }} → {{ x.fechafin }}</div>
-          {% if x.responsabilidades %}
-            <div class="item-desc">{{ x.responsabilidades }}</div>
-          {% endif %}
-
-          {% if x.certificado_pdf %}
-          <div class="certificates">
-            Certificado adjunto
-          </div>
-          {% endif %}
-        </div>
+      <div class="item">
+        <div class="item-title">{{ x.cargodesempenado }} — {{ x.nombrempresa }}</div>
+        <div class="item-sub">{{ x.fechainicio }} → {% if x.fechafin %}{{ x.fechafin }}{% else %}Actualidad{% endif %}</div>
+        {% if x.responsabilidades %}
+          <div class="item-desc">{{ x.responsabilidades }}</div>
+        {% endif %}
+        {% if x.certificado_pdf or x.certificado_imagen %}
+          <div class="cert">Certificado adjunto</div>
+        {% endif %}
+      </div>
       {% endfor %}
     </div>
     {% endif %}
@@ -176,22 +182,19 @@
       <div class="section-title">Cursos y Formación</div>
 
       {% for x in perfil.cursos.all %}
-        <div class="item">
-          <div class="item-title">{{ x.nombrecurso }}</div>
-          <div class="item-sub">
-            {{ x.fechainicio }} → {{ x.fechafin }}
-            {% if x.entidadpatrocinadora %} | {{ x.entidadpatrocinadora }}{% endif %}
-          </div>
-          {% if x.descripcioncurso %}
-            <div class="item-desc">{{ x.descripcioncurso }}</div>
-          {% endif %}
-
-          {% if x.certificado_pdf %}
-          <div class="certificates">
-            Certificado adjunto
-          </div>
-          {% endif %}
+      <div class="item">
+        <div class="item-title">{{ x.nombrecurso }}</div>
+        <div class="item-sub">
+          {{ x.fechainicio }} → {{ x.fechafin }}
+          {% if x.entidadpatrocinadora %} | {{ x.entidadpatrocinadora }}{% endif %}
         </div>
+        {% if x.descripcioncurso %}
+          <div class="item-desc">{{ x.descripcioncurso }}</div>
+        {% endif %}
+        {% if x.certificado_pdf or x.certificado_imagen %}
+          <div class="cert">Certificado adjunto</div>
+        {% endif %}
+      </div>
       {% endfor %}
     </div>
     {% endif %}
@@ -202,44 +205,41 @@
       <div class="section-title">Reconocimientos</div>
 
       {% for x in perfil.reconocimientos.all %}
-        <div class="item">
-          <div class="item-title">{{ x.tiporeconocimiento }}</div>
-          <div class="item-sub">{{ x.entidadpatrocinadora }}</div>
-          {% if x.descripcionreconocimiento %}
-            <div class="item-desc">{{ x.descripcionreconocimiento }}</div>
-          {% endif %}
-
-          {% if x.certificado_pdf %}
-          <div class="certificates">
-            Documento adjunto
-          </div>
-          {% endif %}
-        </div>
+      <div class="item">
+        <div class="item-title">{{ x.tiporeconocimiento }}</div>
+        <div class="item-sub">{{ x.entidadpatrocinadora }}</div>
+        {% if x.descripcionreconocimiento %}
+          <div class="item-desc">{{ x.descripcionreconocimiento }}</div>
+        {% endif %}
+        {% if x.certificado_pdf or x.certificado_imagen %}
+          <div class="cert">Documento adjunto</div>
+        {% endif %}
+      </div>
       {% endfor %}
     </div>
     {% endif %}
 
-    <!-- PRODUCTOS -->
+    <!-- PRODUCTOS ACADÉMICOS -->
     {% if show.prod_acad %}
     <div class="section">
       <div class="section-title">Productos Académicos</div>
 
       {% for x in perfil.productos_academicos.all %}
-        <div class="item">
-          <div class="item-title">{{ x.nombreproducto }}</div>
+      <div class="item">
+        <div class="item-title">{{ x.nombreproducto }}</div>
+        {% if x.descripcion %}
           <div class="item-desc">{{ x.descripcion }}</div>
-
-          {% if x.certificado_pdf %}
-          <div class="certificates">
-            Documento adjunto
-          </div>
-          {% endif %}
-        </div>
+        {% endif %}
+        {% if x.certificado_pdf or x.certificado_imagen %}
+          <div class="cert">Documento adjunto</div>
+        {% endif %}
+      </div>
       {% endfor %}
     </div>
     {% endif %}
 
-  </div>
+  </main>
+
 </div>
 
 </body>
