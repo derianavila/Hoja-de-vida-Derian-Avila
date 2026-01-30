@@ -247,13 +247,10 @@ def imprimir_hoja_vida(request):
     }
 
     # 🔹 Renderiza el NUEVO HTML del CV
-    html = render_to_string(
-        "cv/hoja_vida.html",
-        {
-            "perfil": perfil,
-            "show": show,
-        }
-    )
+ html = render_to_string("pdf/cv.html", {
+    "perfil": perfil,
+    "show": show,
+})
 
     # 🔹 Genera el PDF base (CV)
     base_pdf = HTML(
